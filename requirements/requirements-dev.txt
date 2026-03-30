@@ -1,0 +1,17 @@
+# requirements-dev.txt
+
+# Purpose: This file lists the development dependencies for the project. 
+# It includes tools for testing, code coverage, and linting to ensure code quality and maintainability.
+
+# Input: This file is used by developers to set up their development environment with the necessary tools for testing and code quality checks. 
+# It can be installed using pip with the command `pip install -r requirements-dev.txt`.
+
+# Output: A development environment with all necessary tools installed for testing, code coverage, and linting.
+
+# Used by: Developers working on the project to ensure code quality and maintainability.
+
+
+pytest>=8.0.0
+pytest-cov>=5.0.0
+ruff>=0.6.0
+flake8>=7.0.0

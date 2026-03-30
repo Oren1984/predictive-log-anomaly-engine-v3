@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Predictive Log Anomaly Engine V2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════ NAV ═══════════════════════════ -->
+<nav id="navbar">
+  <div class="nav-container">
+    <div class="nav-brand">
+      <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+      </svg>
+      <span class="brand-name">LogAnomalyEngine</span>
+      <span class="brand-version">v2</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#hero">Overview</a></li>
+      <li><a href="#pipeline">Pipeline</a></li>
+      <li><a href="#simulation">Live Demo</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#results">Results</a></li>
+      <li><a href="#stack">Stack</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════ HERO ═══════════════════════════ -->
+<section id="hero">
+  <div class="hero-bg-grid"></div>
+  <div class="hero-content">
+    <div class="hero-badge">Deep Learning · System Observability · Production-Ready</div>
+    <h1 class="hero-title">
+      Predictive Log<br/>
+      <span class="accent">Anomaly Engine</span>
+    </h1>
+    <p class="hero-subtitle">
+      A four-stage neural network pipeline that transforms raw system logs into<br/>
+      precision anomaly alerts — detecting behavioral drift <em>before</em> failures happen.
+    </p>
+    <div class="hero-counters">
+      <div class="counter-item">
+        <span class="counter-val" data-target="578">0</span>
+        <span class="counter-label">Tests Passing</span>
+      </div>
+      <div class="counter-divider"></div>
+      <div class="counter-item">
+        <span class="counter-val" data-target="4">0</span>
+        <span class="counter-label">Neural Stages</span>
+      </div>
+      <div class="counter-divider"></div>
+      <div class="counter-item">
+        <span class="counter-val counter-lt">&lt;1ms</span>
+        <span class="counter-label">Inference Latency</span>
+      </div>
+    </div>
+    <div class="hero-ctas">
+      <a href="#pipeline" class="btn-primary">Explore the Pipeline →</a>
+      <a href="#simulation" class="btn-secondary">Watch Live Demo</a>
+    </div>
+  </div>
+  <div class="hero-scroll-hint">
+    <span>Scroll to explore</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+      <path d="M12 5v14M5 12l7 7 7-7"/>
+    </svg>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ PROBLEM ═══════════════════════════ -->
+<section id="problem">
+  <div class="container">
+    <div class="section-label">The Problem</div>
+    <h2 class="section-title">Why Traditional Monitoring Falls Short</h2>
+    <div class="problem-grid">
+      <div class="problem-card traditional">
+        <div class="problem-card-header">
+          <span class="problem-icon">⚠</span>
+          <h3>Traditional Monitoring</h3>
+          <span class="problem-tag reactive">Reactive</span>
+        </div>
+        <ul class="problem-list">
+          <li>Threshold rules: "CPU &gt; 90%? Alert."</li>
+          <li>Triggers <em>after</em> failure — too late</li>
+          <li>No context of what the system <em>was doing</em></li>
+          <li>Millions of log lines, no behavioral signal</li>
+          <li>Alert storms — noise hides the real issue</li>
+        </ul>
+        <div class="problem-timeline">
+          <div class="tl-item normal">Normal</div>
+          <div class="tl-item normal">Normal</div>
+          <div class="tl-item normal">Normal</div>
+          <div class="tl-item failure">FAILURE</div>
+          <div class="tl-item alert blink">Alert!</div>
+        </div>
+        <p class="problem-note">Alert fires when it's already too late</p>
+      </div>
+      <div class="problem-vs">VS</div>
+      <div class="problem-card behavioral">
+        <div class="problem-card-header">
+          <span class="problem-icon accent">⚡</span>
+          <h3>Behavioral Detection</h3>
+          <span class="problem-tag proactive">Proactive</span>
+        </div>
+        <ul class="problem-list">
+          <li>Learns normal behavior from log sequences</li>
+          <li>Detects <em>drift</em> from normal patterns</li>
+          <li>Understands multi-event context (window=10)</li>
+          <li>Template mining compresses 10,000x log space</li>
+          <li>Severity classification with confidence scores</li>
+        </ul>
+        <div class="problem-timeline">
+          <div class="tl-item normal">Normal</div>
+          <div class="tl-item drift alert blink">Drift!</div>
+          <div class="tl-item drift">Drift</div>
+          <div class="tl-item failure">FAILURE</div>
+          <div class="tl-item silent">—</div>
+        </div>
+        <p class="problem-note accent">Alert fires during drift — before failure</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ ARCHITECTURE ═══════════════════════════ -->
+<section id="architecture">
+  <div class="container">
+    <div class="section-label">Architecture</div>
+    <h2 class="section-title">System Overview</h2>
+    <p class="section-subtitle">Two inference engines operating in parallel — a validated baseline and a deep learning pipeline</p>
+
+    <div class="arch-wrapper">
+      <svg class="arch-svg" viewBox="0 0 660 255" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="ah" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#00d4ff" opacity="0.85"/>
+          </marker>
+        </defs>
+
+        <!-- Row 1 labels -->
+        <text x="330" y="18" text-anchor="middle" class="arch-row-label">INPUT → PREPROCESSING → SEQUENCE MODELING</text>
+
+        <!-- N1: Raw Logs -->
+        <rect x="5" y="28" width="100" height="66" rx="6" class="arch-node data-node"/>
+        <text x="55" y="56" text-anchor="middle" class="arch-label">Raw Logs</text>
+        <text x="55" y="73" text-anchor="middle" class="arch-sublabel">HDFS · BGL</text>
+        <text x="55" y="86" text-anchor="middle" class="arch-sublabel">syslog format</text>
+
+        <!-- Arrow N1→N2 -->
+        <line x1="105" y1="61" x2="119" y2="61" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#ah)"/>
+
+        <!-- N2: Template Mining -->
+        <rect x="120" y="28" width="115" height="66" rx="6" class="arch-node proc-node"/>
+        <text x="177" y="53" text-anchor="middle" class="arch-label">Template Mining</text>
+        <text x="177" y="70" text-anchor="middle" class="arch-sublabel">Drain3 · 9-step</text>
+        <text x="177" y="83" text-anchor="middle" class="arch-sublabel">regex pipeline</text>
+
+        <!-- Arrow N2→N3 -->
+        <line x1="235" y1="61" x2="249" y2="61" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#ah)"/>
+
+        <!-- N3: Word2Vec -->
+        <rect x="250" y="28" width="115" height="66" rx="6" class="arch-node ml-node"/>
+        <text x="307" y="53" text-anchor="middle" class="arch-label">Word2Vec</text>
+        <text x="307" y="70" text-anchor="middle" class="arch-sublabel">Embeddings</text>
+        <text x="307" y="83" text-anchor="middle" class="arch-sublabel">100-dim vector</text>
+
+        <!-- Arrow N3→N4 -->
+        <line x1="365" y1="61" x2="379" y2="61" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#ah)"/>
+
+        <!-- N4: Seq Buffer -->
+        <rect x="380" y="28" width="115" height="66" rx="6" class="arch-node proc-node"/>
+        <text x="437" y="53" text-anchor="middle" class="arch-label">Sequence</text>
+        <text x="437" y="68" text-anchor="middle" class="arch-label">Buffer</text>
+        <text x="437" y="83" text-anchor="middle" class="arch-sublabel">window = 10</text>
+
+        <!-- Arrow N4→N5 -->
+        <line x1="495" y1="61" x2="509" y2="61" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#ah)"/>
+
+        <!-- N5: BiLSTM -->
+        <rect x="510" y="28" width="115" height="66" rx="6" class="arch-node ml-node ml-highlight"/>
+        <text x="567" y="53" text-anchor="middle" class="arch-label">BiLSTM</text>
+        <text x="567" y="70" text-anchor="middle" class="arch-sublabel">2-layer · hidden</text>
+        <text x="567" y="83" text-anchor="middle" class="arch-sublabel">context [128]</text>
+
+        <!-- Down arrow N5→N6 -->
+        <line x1="567" y1="94" x2="567" y2="157" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#ah)"/>
+
+        <!-- Row 2 label -->
+        <text x="330" y="250" text-anchor="middle" class="arch-row-label">OBSERVABILITY ← API ← ALERTS ← SEVERITY ← ANOMALY SCORING</text>
+
+        <!-- N6: Autoencoder (below N5) -->
+        <rect x="510" y="162" width="115" height="66" rx="6" class="arch-node ml-node ml-highlight"/>
+        <text x="567" y="187" text-anchor="middle" class="arch-label">Autoencoder</text>
+        <text x="567" y="204" text-anchor="middle" class="arch-sublabel">128→32→128</text>
+        <text x="567" y="217" text-anchor="middle" class="arch-sublabel">anomaly score</text>
+
+        <!-- Arrow N6→N7 (left) -->
+        <line x1="510" y1="195" x2="496" y2="195" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#ah)"/>
+
+        <!-- N7: Severity MLP -->
+        <rect x="380" y="162" width="115" height="66" rx="6" class="arch-node ml-node"/>
+        <text x="437" y="187" text-anchor="middle" class="arch-label">Severity MLP</text>
+        <text x="437" y="204" text-anchor="middle" class="arch-sublabel">3-class classifier</text>
+        <text x="437" y="217" text-anchor="middle" class="arch-sublabel">info/warn/critical</text>
+
+        <!-- Arrow N7→N8 (left) -->
+        <line x1="380" y1="195" x2="366" y2="195" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#ah)"/>
+
+        <!-- N8: Alert Manager -->
+        <rect x="250" y="162" width="115" height="66" rx="6" class="arch-node alert-node"/>
+        <text x="307" y="187" text-anchor="middle" class="arch-label">Alert Manager</text>
+        <text x="307" y="204" text-anchor="middle" class="arch-sublabel">cooldown · dedup</text>
+        <text x="307" y="217" text-anchor="middle" class="arch-sublabel">N8N webhook</text>
+
+        <!-- Arrow N8→N9 (left) -->
+        <line x1="250" y1="195" x2="236" y2="195" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#ah)"/>
+
+        <!-- N9: FastAPI -->
+        <rect x="120" y="162" width="115" height="66" rx="6" class="arch-node api-node"/>
+        <text x="177" y="187" text-anchor="middle" class="arch-label">FastAPI</text>
+        <text x="177" y="204" text-anchor="middle" class="arch-sublabel">REST · Auth</text>
+        <text x="177" y="217" text-anchor="middle" class="arch-sublabel">Prometheus metrics</text>
+
+        <!-- Arrow N9→N10 (left) -->
+        <line x1="120" y1="195" x2="106" y2="195" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#ah)"/>
+
+        <!-- N10: Observability -->
+        <rect x="5" y="162" width="100" height="66" rx="6" class="arch-node obs-node"/>
+        <text x="55" y="187" text-anchor="middle" class="arch-label">Observability</text>
+        <text x="55" y="204" text-anchor="middle" class="arch-sublabel">Prometheus</text>
+        <text x="55" y="217" text-anchor="middle" class="arch-sublabel">Grafana</text>
+      </svg>
+    </div>
+
+    <div class="arch-legend">
+      <span class="legend-item data-node">Log Data</span>
+      <span class="legend-item proc-node">Processing</span>
+      <span class="legend-item ml-node">ML Model</span>
+      <span class="legend-item alert-node">Alert System</span>
+      <span class="legend-item api-node">API Layer</span>
+      <span class="legend-item obs-node">Observability</span>
+    </div>
+
+    <div class="arch-callout">
+      <div class="callout-item">
+        <span class="callout-icon">⚡</span>
+        <div>
+          <strong>Dual-Engine Design</strong>
+          <p>V1 (IsolationForest) and V2 (Deep Learning) run in parallel — proven baseline vs. new frontier</p>
+        </div>
+      </div>
+      <div class="callout-item">
+        <span class="callout-icon">🔒</span>
+        <div>
+          <strong>Per-Stream Isolation</strong>
+          <p>Separate rolling buffers per service/session — a noisy stream never pollutes another's baseline</p>
+        </div>
+      </div>
+      <div class="callout-item">
+        <span class="callout-icon">📡</span>
+        <div>
+          <strong>Observability-First</strong>
+          <p>Prometheus metrics, health checks, and Grafana dashboards built in — not bolted on</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ PIPELINE ═══════════════════════════ -->
+<section id="pipeline">
+  <div class="container">
+    <div class="section-label">Technical Deep Dive</div>
+    <h2 class="section-title">The 8-Stage Pipeline</h2>
+    <p class="section-subtitle">From raw log string to precision alert — follow each transformation</p>
+
+    <div class="pipeline-wrapper">
+      <!-- Progress dots -->
+      <div class="pipeline-progress" id="pipeline-progress">
+        <!-- injected by JS -->
+      </div>
+
+      <!-- Step card -->
+      <div class="pipeline-card" id="pipeline-card">
+        <!-- injected by JS -->
+      </div>
+
+      <!-- Controls -->
+      <div class="pipeline-controls">
+        <button class="btn-control" id="prev-step" disabled>← Previous</button>
+        <span class="step-counter" id="step-counter">Step 1 of 8</span>
+        <button class="btn-control" id="next-step">Next →</button>
+      </div>
+
+      <!-- Auto-play toggle -->
+      <div class="pipeline-autoplay">
+        <button class="btn-autoplay" id="autoplay-btn">⏵ Auto-play</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ SIMULATION ═══════════════════════════ -->
+<section id="simulation">
+  <div class="container">
+    <div class="section-label">Live System Demo</div>
+    <h2 class="section-title">Watch the Engine Run</h2>
+    <p class="section-subtitle">Pre-recorded log data cycling through the pipeline — all static, all real data formats</p>
+
+    <!-- Live metrics bar -->
+    <div class="sim-metrics">
+      <div class="sim-metric">
+        <span class="sim-metric-val" id="m-events">0</span>
+        <span class="sim-metric-label">Events Processed</span>
+      </div>
+      <div class="sim-metric">
+        <span class="sim-metric-val" id="m-windows">0</span>
+        <span class="sim-metric-label">Windows Emitted</span>
+      </div>
+      <div class="sim-metric warn">
+        <span class="sim-metric-val" id="m-anomalies">0</span>
+        <span class="sim-metric-label">Anomalies Detected</span>
+      </div>
+      <div class="sim-metric crit">
+        <span class="sim-metric-val" id="m-alerts">0</span>
+        <span class="sim-metric-label">Alerts Fired</span>
+      </div>
+    </div>
+
+    <!-- Panels -->
+    <div class="sim-panels">
+      <!-- Left: Log Feed -->
+      <div class="sim-panel">
+        <div class="sim-panel-header">
+          <span class="panel-title">
+            <span class="live-dot"></span>
+            Log Stream
+          </span>
+          <span class="panel-hint">service: namenode · session: 12</span>
+        </div>
+        <div class="sim-log-feed" id="log-feed">
+          <!-- injected by JS -->
+        </div>
+      </div>
+
+      <!-- Right: Alert Stream -->
+      <div class="sim-panel">
+        <div class="sim-panel-header">
+          <span class="panel-title">
+            <span class="live-dot alert-dot"></span>
+            Alert Stream
+          </span>
+          <span class="panel-hint">last 8 alerts</span>
+        </div>
+        <div class="sim-alert-feed" id="alert-feed">
+          <div class="alert-feed-empty" id="alert-feed-empty">
+            <span>No alerts yet — system nominal</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="sim-controls">
+      <button class="btn-attack" id="btn-attack">⚡ Simulate Attack</button>
+      <button class="btn-pause" id="btn-pause">⏸ Pause</button>
+      <button class="btn-reset" id="btn-reset">↺ Reset</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ RESULTS ═══════════════════════════ -->
+<section id="results">
+  <div class="container">
+    <div class="section-label">Validation</div>
+    <h2 class="section-title">Implemented. Tested. Observable.</h2>
+    <p class="section-subtitle">This is a real system — not a prototype. Every component is tested, containerized, and monitored.</p>
+
+    <div class="results-grid">
+      <!-- Metric cards -->
+      <div class="result-card">
+        <div class="result-val">578</div>
+        <div class="result-label">Tests Passing</div>
+        <div class="result-breakdown">
+          <span class="rb-item">Unit</span>
+          <span class="rb-item">Integration</span>
+          <span class="rb-item">System</span>
+          <span class="rb-item">Smoke</span>
+        </div>
+      </div>
+      <div class="result-card">
+        <div class="result-val">&lt;1ms</div>
+        <div class="result-label">Inference Latency</div>
+        <div class="result-breakdown">
+          <span class="rb-item">per window</span>
+          <span class="rb-item">4-stage ML</span>
+          <span class="rb-item">in-process</span>
+        </div>
+      </div>
+      <div class="result-card">
+        <div class="result-val">200</div>
+        <div class="result-label">Alert Ring Buffer</div>
+        <div class="result-breakdown">
+          <span class="rb-item">always queryable</span>
+          <span class="rb-item">dedup + cooldown</span>
+          <span class="rb-item">severity labels</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grafana placeholder -->
+    <div class="grafana-section">
+      <div class="grafana-label">Grafana Dashboard · Prometheus Metrics</div>
+      <div class="grafana-placeholder" id="grafana-area">
+        <!-- Simulated Grafana dashboard -->
+        <div class="grafana-header">
+          <span class="grafana-title">📊 Anomaly Detection Dashboard</span>
+          <span class="grafana-time">Last 1h · Auto-refresh: 10s</span>
+        </div>
+        <div class="grafana-panels">
+          <div class="gp-panel">
+            <div class="gp-title">Anomaly Score Over Time</div>
+            <div class="gp-chart">
+              <svg viewBox="0 0 400 80" class="score-chart">
+                <polyline points="0,60 30,55 60,58 90,50 120,52 150,45 180,20 210,15 240,25 270,60 300,58 330,55 360,52 400,50" fill="none" stroke="#00d4ff" stroke-width="1.5" opacity="0.7"/>
+                <polyline points="0,60 30,55 60,58 90,50 120,52 150,45 180,20 210,15 240,25" fill="none" stroke="#ff3b30" stroke-width="2"/>
+                <line x1="0" y1="40" x2="400" y2="40" stroke="#ff9500" stroke-width="1" stroke-dasharray="4,4" opacity="0.6"/>
+                <text x="5" y="37" class="chart-label" fill="#ff9500" font-size="8">threshold</text>
+                <circle cx="180" cy="20" r="4" fill="#ff3b30"/>
+                <circle cx="210" cy="15" r="4" fill="#ff3b30"/>
+              </svg>
+            </div>
+          </div>
+          <div class="gp-panel">
+            <div class="gp-title">Alerts by Severity</div>
+            <div class="gp-bars">
+              <div class="gp-bar-row">
+                <span class="gp-bar-label">critical</span>
+                <div class="gp-bar-track"><div class="gp-bar critical" style="width:30%"></div></div>
+                <span class="gp-bar-val">12</span>
+              </div>
+              <div class="gp-bar-row">
+                <span class="gp-bar-label">warning</span>
+                <div class="gp-bar-track"><div class="gp-bar warning" style="width:55%"></div></div>
+                <span class="gp-bar-val">22</span>
+              </div>
+              <div class="gp-bar-row">
+                <span class="gp-bar-label">info</span>
+                <div class="gp-bar-track"><div class="gp-bar info" style="width:80%"></div></div>
+                <span class="gp-bar-val">31</span>
+              </div>
+            </div>
+          </div>
+          <div class="gp-panel">
+            <div class="gp-title">Pipeline Health</div>
+            <div class="gp-stats">
+              <div class="gp-stat">
+                <span class="gp-stat-label">ingest_events_total</span>
+                <span class="gp-stat-val green">9,482</span>
+              </div>
+              <div class="gp-stat">
+                <span class="gp-stat-label">ingest_windows_total</span>
+                <span class="gp-stat-val green">948</span>
+              </div>
+              <div class="gp-stat">
+                <span class="gp-stat-label">service_health</span>
+                <span class="gp-stat-val green">1.0</span>
+              </div>
+              <div class="gp-stat">
+                <span class="gp-stat-label">ingest_errors_total</span>
+                <span class="gp-stat-val green">0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grafana-note">
+          ⟶ Replace this block with a real Grafana screenshot at <code>assets/grafana-dashboard.png</code>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alert lifecycle -->
+    <div class="alert-lifecycle">
+      <div class="lifecycle-title">Alert Lifecycle</div>
+      <div class="lifecycle-steps">
+        <div class="lc-step">
+          <div class="lc-icon">📥</div>
+          <div class="lc-text">Anomaly<br/>Scored</div>
+        </div>
+        <div class="lc-arrow">→</div>
+        <div class="lc-step">
+          <div class="lc-icon">⏱</div>
+          <div class="lc-text">Cooldown<br/>Check</div>
+        </div>
+        <div class="lc-arrow">→</div>
+        <div class="lc-step">
+          <div class="lc-icon">🏷</div>
+          <div class="lc-text">Severity<br/>Assigned</div>
+        </div>
+        <div class="lc-arrow">→</div>
+        <div class="lc-step">
+          <div class="lc-icon">📡</div>
+          <div class="lc-text">Webhook<br/>Dispatched</div>
+        </div>
+        <div class="lc-arrow">→</div>
+        <div class="lc-step">
+          <div class="lc-icon">💾</div>
+          <div class="lc-text">Ring Buffer<br/>Stored</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ STACK ═══════════════════════════ -->
+<section id="stack">
+  <div class="container">
+    <div class="section-label">Technical Stack</div>
+    <h2 class="section-title">Built With Precision</h2>
+
+    <div class="stack-grid">
+      <div class="stack-category">
+        <div class="stack-cat-title">ML & Modeling</div>
+        <div class="stack-items">
+          <div class="stack-item"><span class="stack-icon">🔥</span><span>PyTorch</span><span class="stack-use">BiLSTM · Autoencoder · MLP</span></div>
+          <div class="stack-item"><span class="stack-icon">📐</span><span>scikit-learn</span><span class="stack-use">IsolationForest (V1 baseline)</span></div>
+          <div class="stack-item"><span class="stack-icon">📊</span><span>Gensim Word2Vec</span><span class="stack-use">100-dim log embeddings</span></div>
+          <div class="stack-item"><span class="stack-icon">🔢</span><span>NumPy</span><span class="stack-use">tensor ops · window assembly</span></div>
+        </div>
+      </div>
+      <div class="stack-category">
+        <div class="stack-cat-title">API & Backend</div>
+        <div class="stack-items">
+          <div class="stack-item"><span class="stack-icon">⚡</span><span>FastAPI</span><span class="stack-use">/ingest · /v2/ingest · /alerts</span></div>
+          <div class="stack-item"><span class="stack-icon">✅</span><span>Pydantic</span><span class="stack-use">schema validation · type safety</span></div>
+          <div class="stack-item"><span class="stack-icon">🔑</span><span>Auth Middleware</span><span class="stack-use">X-API-Key header validation</span></div>
+          <div class="stack-item"><span class="stack-icon">🐍</span><span>Python 3.11</span><span class="stack-use">async · type hints throughout</span></div>
+        </div>
+      </div>
+      <div class="stack-category">
+        <div class="stack-cat-title">Infrastructure</div>
+        <div class="stack-items">
+          <div class="stack-item"><span class="stack-icon">🐳</span><span>Docker Compose</span><span class="stack-use">API + Prometheus + Grafana</span></div>
+          <div class="stack-item"><span class="stack-icon">📈</span><span>Prometheus</span><span class="stack-use">metrics scrape · 7-day retention</span></div>
+          <div class="stack-item"><span class="stack-icon">📊</span><span>Grafana</span><span class="stack-use">pre-provisioned dashboards</span></div>
+          <div class="stack-item"><span class="stack-icon">🔗</span><span>N8N Webhooks</span><span class="stack-use">alert dispatch · dry-run mode</span></div>
+        </div>
+      </div>
+      <div class="stack-category">
+        <div class="stack-cat-title">Testing</div>
+        <div class="stack-items">
+          <div class="stack-item"><span class="stack-icon">🧪</span><span>pytest</span><span class="stack-use">578 tests · markers: slow/integration</span></div>
+          <div class="stack-item"><span class="stack-icon">🌐</span><span>FastAPI TestClient</span><span class="stack-use">integration + API endpoint tests</span></div>
+          <div class="stack-item"><span class="stack-icon">🔬</span><span>Unit Tests</span><span class="stack-use">each ML model in isolation</span></div>
+          <div class="stack-item"><span class="stack-icon">🏗</span><span>System Tests</span><span class="stack-use">E2E pipeline · streaming simulation</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dual engine comparison -->
+    <div class="engine-compare">
+      <div class="compare-title">Dual-Engine Architecture</div>
+      <div class="compare-table">
+        <div class="ct-header">
+          <span></span>
+          <span>V1 — Baseline</span>
+          <span>V2 — Deep Learning</span>
+        </div>
+        <div class="ct-row">
+          <span>Input Format</span>
+          <span>Token IDs</span>
+          <span>Raw log strings</span>
+        </div>
+        <div class="ct-row">
+          <span>Anomaly Model</span>
+          <span>IsolationForest + Transformer</span>
+          <span>LSTM + Denoising Autoencoder</span>
+        </div>
+        <div class="ct-row">
+          <span>Severity</span>
+          <span>Threshold rules</span>
+          <span>Trained MLP classifier</span>
+        </div>
+        <div class="ct-row">
+          <span>API Routes</span>
+          <span><code>/ingest</code> · <code>/alerts</code></span>
+          <span><code>/v2/ingest</code> · <code>/v2/alerts</code></span>
+        </div>
+        <div class="ct-row">
+          <span>Status</span>
+          <span class="tag-green">Production-ready</span>
+          <span class="tag-blue">Training phase</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ TEAM ════════════════════════════ -->
+<section id="team">
+  <div class="container">
+    <div class="section-label">The Team</div>
+    <h2 class="section-title">Project Team</h2>
+    <p class="section-subtitle">Developed as part of an Applied AI Engineering project</p>
+
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="team-avatar">OS</div>
+        <div class="team-name">Oren Salami</div>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar">DK</div>
+        <div class="team-name">Dan Kalfon</div>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar">NR</div>
+        <div class="team-name">Nahshon Raizman</div>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar">JF</div>
+        <div class="team-name">Jonathan Finkelstein</div>
+      </div>
+    </div>
+
+    <p class="team-shared">
+      Shared responsibilities across the team:
+      <span>DevOps · Backend · Frontend · UI · QA · Architecture · Technical Design</span>
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ FOOTER ═══════════════════════════ -->
+<footer id="footer">
+  <div class="container">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+        </svg>
+        <span>Predictive Log Anomaly Engine V2</span>
+      </div>
+      <div class="footer-meta">
+        <span>Academic Project · 2026</span>
+        <span class="footer-sep">·</span>
+        <span>FastAPI · PyTorch · Prometheus · Grafana</span>
+        <span class="footer-sep">·</span>
+        <span>578 Tests · 4 Neural Stages</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+
+<!--
+  ═══════════════════════════════════════════════════════
+  DEBUG CHECKLIST — if something looks wrong
+  ═══════════════════════════════════════════════════════
+
+  HOW TO OPEN:
+    Double-click index.html  →  opens in default browser
+    OR drag index.html onto a browser window
+    OR: right-click → Open with → Chrome / Firefox / Edge
+
+  IF STYLES ARE MISSING (unstyled plain text):
+    • Check that css/styles.css is in the same folder as index.html
+    • Path must be:  static-demo/css/styles.css
+    • Open DevTools (F12) → Network tab → look for styles.css
+      If it shows as "Failed" or 404, the file is missing or misplaced.
+
+  IF THE PIPELINE IS BLANK / SIMULATION DOESN'T START:
+    • Open DevTools (F12) → Console tab
+    • Any red [LogAnomalyEngine] error lines tell you which module failed
+    • Check js/main.js is in the same folder as index.html
+    • Path must be:  static-demo/js/main.js
+
+  IF FONTS LOOK DIFFERENT:
+    • The site uses Google Fonts (Inter + JetBrains Mono) via CDN
+    • If you're offline, it falls back to system fonts — layout is unaffected
+
+  IF SIMULATION NEVER STARTS:
+    • The simulation auto-starts when you scroll to the "Live Demo" section
+    • Scroll down until the section is 20% visible — it triggers automatically
+    • Or click "Watch Live Demo" in the hero to jump there
+
+  LIVE SERVER (optional, for best experience):
+    If you have VS Code + Live Server extension:
+      Right-click index.html → "Open with Live Server"
+    Or with Python (any version 3.x):
+      cd static-demo && python -m http.server 8080
+      Then open: http://localhost:8080
+  ═══════════════════════════════════════════════════════
+-->
+</body>
+</html>

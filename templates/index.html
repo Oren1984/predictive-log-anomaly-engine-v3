@@ -1,0 +1,1647 @@
+<!--
+File: templates/index.html
+
+Purpose:
+    Phase 8 — Observability & Investigation Dashboard for the Predictive Log Anomaly Engine.
+    A read-only, professional AIOps dashboard providing:
+      - System summary dashboard with live stat cards
+      - Recent alerts panel with severity filtering
+      - AI investigation console (RAG query interface)
+      - System health & component status view
+      - Metrics & observability panel (live Prometheus data)
+
+    All data is pulled from existing read-only backend endpoints:
+      GET  /health     — system health and component state
+      GET  /alerts     — alert ring buffer
+      GET  /metrics    — Prometheus text output
+      POST /query      — RAG investigation queries
+
+Input:
+    Browser — no user authentication required (public endpoints).
+
+Output:
+    Visual observability dashboard (read-only).
+
+Used by:
+    FastAPI application (src/api/ui.py) serving GET /
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Predictive Log Anomaly Engine — Observability Dashboard</title>
+  <style>
+    /* =====================================================================
+       Reset & base
+       ===================================================================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #f5f7fb;
+      color: #111827;
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* =====================================================================
+       Layout
+       ===================================================================== */
+    .app-shell { display: flex; flex-direction: column; min-height: 100vh; }
+    main { flex: 1; padding: 1.5rem 2rem 3rem; max-width: 1200px; width: 100%; }
+
+    /* =====================================================================
+       Header
+       ===================================================================== */
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-left { display: flex; align-items: baseline; gap: 0.85rem; }
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+    }
+    .logo-icon {
+      width: 22px; height: 22px;
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      border-radius: 5px;
+      flex-shrink: 0;
+    }
+    .header-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #111827;
+      letter-spacing: 0.02em;
+    }
+    .header-subtitle {
+      font-size: 0.72rem;
+      color: #6b7280;
+      font-weight: 400;
+    }
+    .header-right { display: flex; align-items: center; gap: 1rem; }
+    .system-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.72rem;
+      color: #6b7280;
+    }
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #d1d5db;
+      flex-shrink: 0;
+    }
+    .dot.healthy  { background: #10b981; box-shadow: 0 0 6px #10b981; }
+    .dot.degraded { background: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
+    .dot.unhealthy{ background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+
+    /* =====================================================================
+       Navigation tabs
+       ===================================================================== */
+    nav.tabs {
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      padding: 0 2rem;
+      gap: 0.1rem;
+      overflow-x: auto;
+    }
+    .tab {
+      padding: 0.7rem 1.1rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #6b7280;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+      user-select: none;
+      transition: color 0.15s, border-color 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .tab .tab-icon { font-size: 0.85em; opacity: 0.7; }
+    .tab.active { color: #2563eb; border-bottom-color: #2563eb; }
+    .tab:hover:not(.active) { color: #374151; }
+    .tab-badge {
+      background: #e5e7eb;
+      color: #6b7280;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.05rem 0.4rem;
+      border-radius: 9999px;
+      min-width: 18px;
+      text-align: center;
+    }
+    .tab.active .tab-badge { background: #dbeafe; color: #2563eb; }
+
+    /* =====================================================================
+       Sections
+       ===================================================================== */
+    section { display: none; }
+    section.active { display: block; }
+
+    /* =====================================================================
+       Typography helpers
+       ===================================================================== */
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      margin-bottom: 1rem;
+    }
+    .label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .muted { color: #6b7280; font-size: 0.8rem; }
+    .mono { font-family: ui-monospace, "Cascadia Code", monospace; }
+
+    /* =====================================================================
+       Cards
+       ===================================================================== */
+    .card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      padding: 1.25rem 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .card + .card { margin-top: 1rem; }
+
+    /* =====================================================================
+       Stat cards (dashboard grid)
+       ===================================================================== */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .stat-card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      padding: 1.1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .stat-card.accent-cyan  { border-left: 3px solid #2563eb; }
+    .stat-card.accent-green { border-left: 3px solid #10b981; }
+    .stat-card.accent-amber { border-left: 3px solid #f59e0b; }
+    .stat-card.accent-red   { border-left: 3px solid #ef4444; }
+    .stat-card.accent-blue  { border-left: 3px solid #3b82f6; }
+    .stat-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .stat-value {
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: #111827;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-value.small { font-size: 1.2rem; }
+    .stat-sub {
+      font-size: 0.72rem;
+      color: #6b7280;
+    }
+
+    /* =====================================================================
+       Severity badges
+       ===================================================================== */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.15rem 0.55rem;
+      border-radius: 9999px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+    .badge.critical { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+    .badge.high     { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
+    .badge.medium   { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+    .badge.low      { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+    .badge.info     { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+    .badge.healthy  { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+    .badge.degraded { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+    .badge.unhealthy{ background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+    .badge.unknown  { background: #f9fafb; color: #6b7280; border: 1px solid #d1d5db; }
+
+    /* =====================================================================
+       Status indicator (health components)
+       ===================================================================== */
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 0.82rem;
+    }
+    .status-row:last-child { border-bottom: none; }
+    .status-name { color: #6b7280; }
+    .status-val  { font-weight: 600; }
+    .status-val.ok   { color: #10b981; }
+    .status-val.warn { color: #f59e0b; }
+    .status-val.err  { color: #ef4444; }
+    .status-val.muted{ color: #475569; }
+
+    /* =====================================================================
+       Alert table
+       ===================================================================== */
+    .table-wrap { overflow-x: auto; border-radius: 0.375rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; min-width: 600px; }
+    thead tr { background: #f9fafb; }
+    th {
+      text-align: left;
+      padding: 0.55rem 0.75rem;
+      color: #6b7280;
+      font-weight: 600;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      border-bottom: 1px solid #e5e7eb;
+      white-space: nowrap;
+    }
+    td {
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid #e5e7eb;
+      vertical-align: top;
+      color: #6b7280;
+    }
+    td.primary { color: #111827; }
+    tbody tr:hover td { background: rgba(37,99,235,0.04); }
+    tbody tr:last-child td { border-bottom: none; }
+
+    /* =====================================================================
+       Filter bar
+       ===================================================================== */
+    .filter-bar {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+    .filter-btn {
+      padding: 0.3rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid #e5e7eb;
+      background: transparent;
+      color: #6b7280;
+      transition: all 0.15s;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .filter-btn:hover { border-color: #2563eb; color: #2563eb; }
+    .filter-btn.active { background: #dbeafe; border-color: #2563eb; color: #2563eb; }
+    .filter-sep { color: #e5e7eb; }
+
+    /* =====================================================================
+       Buttons
+       ===================================================================== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 1rem;
+      border-radius: 0.375rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: background 0.15s;
+    }
+    .btn-primary { background: #2563eb; color: #ffffff; }
+    .btn-primary:hover:not(:disabled) { background: #1d4ed8; }
+    .btn-ghost {
+      background: transparent;
+      color: #6b7280;
+      border: 1px solid #e5e7eb;
+    }
+    .btn-ghost:hover:not(:disabled) { border-color: #2563eb; color: #2563eb; }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* =====================================================================
+       Form inputs
+       ===================================================================== */
+    .input-field {
+      width: 100%;
+      background: #f9fafb;
+      color: #111827;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.375rem;
+      padding: 0.55rem 0.75rem;
+      font-family: inherit;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .input-field:focus { border-color: #2563eb; }
+    .input-field::placeholder { color: #9ca3af; }
+
+    /* =====================================================================
+       Answer / evidence boxes
+       ===================================================================== */
+    .answer-box {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.375rem;
+      padding: 1rem 1.25rem;
+      margin-top: 1rem;
+    }
+    .answer-box-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #2563eb;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.6rem;
+    }
+    .answer-text {
+      font-size: 0.88rem;
+      color: #111827;
+      line-height: 1.7;
+    }
+    .source-item {
+      border-top: 1px solid #e5e7eb;
+      padding: 0.65rem 0;
+    }
+    .source-item:first-child { border-top: none; }
+    .source-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.3rem;
+      gap: 0.5rem;
+    }
+    .source-id {
+      font-size: 0.72rem;
+      color: #2563eb;
+      font-family: ui-monospace, monospace;
+      font-weight: 600;
+    }
+    .source-score { font-size: 0.68rem; color: #9ca3af; }
+    .source-snippet { font-size: 0.8rem; color: #6b7280; line-height: 1.55; }
+
+    /* =====================================================================
+       Quick query chips
+       ===================================================================== */
+    .quick-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin: 0.65rem 0;
+    }
+    .chip {
+      padding: 0.2rem 0.65rem;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      border-radius: 9999px;
+      font-size: 0.72rem;
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .chip:hover { border-color: #2563eb; color: #2563eb; }
+
+    /* =====================================================================
+       Metrics display
+       ===================================================================== */
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.55rem 0;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 0.82rem;
+    }
+    .metric-row:last-child { border-bottom: none; }
+    .metric-name { color: #6b7280; font-family: ui-monospace, monospace; font-size: 0.75rem; }
+    .metric-value { color: #111827; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+    .raw-box {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.375rem;
+      padding: 1rem;
+      font-family: ui-monospace, monospace;
+      font-size: 0.72rem;
+      color: #6b7280;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre;
+      word-break: break-all;
+      line-height: 1.5;
+    }
+
+    /* =====================================================================
+       Progress bar (severity distribution)
+       ===================================================================== */
+    .sev-bar-wrap {
+      display: flex;
+      height: 6px;
+      border-radius: 9999px;
+      overflow: hidden;
+      background: #e5e7eb;
+      margin: 0.5rem 0;
+    }
+    .sev-seg { height: 100%; transition: width 0.4s; }
+    .sev-seg.critical { background: #ef4444; }
+    .sev-seg.high     { background: #f97316; }
+    .sev-seg.medium   { background: #f59e0b; }
+    .sev-seg.low      { background: #10b981; }
+
+    .sev-legend {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      font-size: 0.72rem;
+      color: #6b7280;
+      margin-top: 0.4rem;
+    }
+    .sev-legend-item { display: flex; align-items: center; gap: 0.3rem; }
+    .sev-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* =====================================================================
+       Health component grid
+       ===================================================================== */
+    .component-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+    .component-card {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.375rem;
+      padding: 0.85rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .component-name { font-size: 0.75rem; color: #6b7280; font-weight: 600; text-transform: capitalize; }
+    .component-status { font-size: 0.85rem; font-weight: 700; }
+    .component-status.ok   { color: #10b981; }
+    .component-status.warn { color: #f59e0b; }
+    .component-status.err  { color: #ef4444; }
+    .component-status.muted{ color: #475569; }
+
+    /* =====================================================================
+       Toolbar row
+       ===================================================================== */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .toolbar-left  { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+    .toolbar-right { display: flex; align-items: center; gap: 0.5rem; }
+
+    /* =====================================================================
+       Empty + error states
+       ===================================================================== */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #9ca3af;
+    }
+    .empty-state .empty-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .empty-state .empty-msg { font-size: 0.85rem; }
+    .error-msg { color: #ef4444; font-size: 0.8rem; }
+
+    /* =====================================================================
+       Spinner
+       ===================================================================== */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid #e5e7eb;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: inline-block;
+    }
+
+    /* =====================================================================
+       Refresh timer
+       ===================================================================== */
+    .refresh-info {
+      font-size: 0.7rem;
+      color: #9ca3af;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    /* =====================================================================
+       Two-column layout (investigation)
+       ===================================================================== */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* =====================================================================
+       Uptime display
+       ===================================================================== */
+    .uptime-large {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #111827;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* =====================================================================
+       Collapsible
+       ===================================================================== */
+    .collapsible-toggle {
+      background: none;
+      border: none;
+      color: #9ca3af;
+      font-size: 0.72rem;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      margin-top: 0.75rem;
+    }
+    .collapsible-toggle:hover { color: #6b7280; }
+    .collapsible-body { display: none; margin-top: 0.5rem; }
+    .collapsible-body.open { display: block; }
+
+    /* =====================================================================
+       Footer
+       ===================================================================== */
+    footer {
+      border-top: 1px solid #e5e7eb;
+      padding: 0.75rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.7rem;
+      color: #1e3a5a;
+    }
+
+    /* =====================================================================
+       Responsive
+       ===================================================================== */
+    @media (max-width: 640px) {
+      main { padding: 1rem; }
+      header { padding: 0 1rem; }
+      nav.tabs { padding: 0 0.5rem; }
+      .header-subtitle { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+
+<!-- ===================================================================
+     Header
+     =================================================================== -->
+<header>
+  <div class="header-left">
+    <div class="header-logo">
+      <div class="logo-icon"></div>
+      <span class="header-title">Predictive Log Anomaly Engine</span>
+    </div>
+    <span class="header-subtitle">AI-Powered Observability &amp; Investigation Dashboard</span>
+  </div>
+  <div class="header-right">
+    <div class="system-badge">
+      <div class="dot" id="hdr-dot"></div>
+      <span id="hdr-status-text">Checking...</span>
+    </div>
+  </div>
+</header>
+
+<!-- ===================================================================
+     Navigation
+     =================================================================== -->
+<nav class="tabs">
+  <div class="tab active" onclick="showTab('dashboard')">
+    <span class="tab-icon">&#9641;</span> Dashboard
+  </div>
+  <div class="tab" onclick="showTab('alerts')">
+    <span class="tab-icon">&#9888;</span> Alerts
+    <span class="tab-badge" id="tab-alerts-count">0</span>
+  </div>
+  <div class="tab" onclick="showTab('investigation')">
+    <span class="tab-icon">&#128270;</span> Investigation
+  </div>
+  <div class="tab" onclick="showTab('health')">
+    <span class="tab-icon">&#10084;</span> Health
+  </div>
+  <div class="tab" onclick="showTab('metrics')">
+    <span class="tab-icon">&#128202;</span> Metrics
+  </div>
+</nav>
+
+<!-- ===================================================================
+     Main content
+     =================================================================== -->
+<main>
+
+  <!-- =================================================================
+       Section 1: Dashboard
+       ================================================================= -->
+  <section id="section-dashboard" class="active">
+
+    <!-- Stat cards -->
+    <div class="stat-grid" id="dash-stat-grid">
+      <div class="stat-card accent-cyan">
+        <div class="stat-label">Events Processed</div>
+        <div class="stat-value" id="dash-events">--</div>
+        <div class="stat-sub">total ingested</div>
+      </div>
+      <div class="stat-card accent-blue">
+        <div class="stat-label">Windows Scored</div>
+        <div class="stat-value" id="dash-windows">--</div>
+        <div class="stat-sub">sliding windows emitted</div>
+      </div>
+      <div class="stat-card accent-amber" id="dash-alerts-card">
+        <div class="stat-label">Total Alerts</div>
+        <div class="stat-value" id="dash-alerts">--</div>
+        <div class="stat-sub">in ring buffer</div>
+      </div>
+      <div class="stat-card accent-green">
+        <div class="stat-label">System Health</div>
+        <div class="stat-value small" id="dash-health-val">--</div>
+        <div class="stat-sub" id="dash-uptime">uptime unknown</div>
+      </div>
+    </div>
+
+    <!-- Engine mode info bar -->
+    <div class="card" style="margin-bottom:1rem;">
+      <div class="toolbar" style="margin-bottom:0;">
+        <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
+          <div>
+            <div class="label" style="margin-bottom:0.2rem;">Engine Mode</div>
+            <span id="dash-mode" class="badge info">--</span>
+          </div>
+          <div>
+            <div class="label" style="margin-bottom:0.2rem;">Severity Breakdown</div>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;" id="dash-sev-counts">
+              <span class="muted">No alert data</span>
+            </div>
+          </div>
+        </div>
+        <div class="refresh-info">
+          <div class="spinner" id="dash-spinner" style="display:none;"></div>
+          <span id="dash-refresh-label">Auto-refresh 30s</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Severity bar -->
+    <div class="card" style="margin-bottom:1rem;" id="dash-sev-bar-card">
+      <div class="label" style="margin-bottom:0.6rem;">Alert Severity Distribution</div>
+      <div class="sev-bar-wrap" id="dash-sev-bar">
+        <div class="sev-seg critical" style="width:0%"></div>
+        <div class="sev-seg high"     style="width:0%"></div>
+        <div class="sev-seg medium"   style="width:0%"></div>
+        <div class="sev-seg low"      style="width:0%"></div>
+      </div>
+      <div class="sev-legend">
+        <span class="sev-legend-item"><span class="sev-dot" style="background:#ef4444"></span><span id="leg-critical">Critical: 0</span></span>
+        <span class="sev-legend-item"><span class="sev-dot" style="background:#f97316"></span><span id="leg-high">High: 0</span></span>
+        <span class="sev-legend-item"><span class="sev-dot" style="background:#f59e0b"></span><span id="leg-medium">Medium: 0</span></span>
+        <span class="sev-legend-item"><span class="sev-dot" style="background:#10b981"></span><span id="leg-low">Low: 0</span></span>
+      </div>
+    </div>
+
+    <!-- Recent alerts mini-table -->
+    <div class="card">
+      <div class="toolbar">
+        <div class="section-title" style="margin-bottom:0;">Recent Alerts</div>
+        <button class="btn btn-ghost" onclick="refreshAll()">Refresh</button>
+      </div>
+      <div id="dash-recent-alerts">
+        <div class="empty-state">
+          <div class="empty-icon">&#9888;</div>
+          <div class="empty-msg">No alerts yet — system is monitoring.</div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- =================================================================
+       Section 2: Alerts
+       ================================================================= -->
+  <section id="section-alerts">
+
+    <div class="card">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <div class="section-title" style="margin-bottom:0;">Anomaly Alerts</div>
+          <span class="badge info" id="alerts-count-badge">0 alerts</span>
+        </div>
+        <div class="toolbar-right">
+          <button class="btn btn-ghost" id="alerts-refresh-btn" onclick="loadAlerts(true)">
+            <span>Refresh</span>
+          </button>
+        </div>
+      </div>
+
+      <p class="muted" style="margin-bottom:1rem;">
+        Alerts stored in the in-memory ring buffer (newest first). Each alert was fired when an
+        anomaly score exceeded the model threshold for a given event stream.
+      </p>
+
+      <!-- Severity filter -->
+      <div class="filter-bar">
+        <span class="label">Filter:</span>
+        <button class="filter-btn active" onclick="setAlertFilter('all', this)">All</button>
+        <button class="filter-btn" onclick="setAlertFilter('critical', this)">Critical</button>
+        <button class="filter-btn" onclick="setAlertFilter('high', this)">High</button>
+        <button class="filter-btn" onclick="setAlertFilter('medium', this)">Medium</button>
+        <button class="filter-btn" onclick="setAlertFilter('low', this)">Low</button>
+      </div>
+
+      <div class="table-wrap" id="alerts-table-wrap">
+        <div class="empty-state">
+          <div class="empty-icon">&#9888;</div>
+          <div class="empty-msg">No alerts. Switch to the Dashboard and click Refresh.</div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- =================================================================
+       Section 3: Investigation
+       ================================================================= -->
+  <section id="section-investigation">
+
+    <div class="card" style="margin-bottom:1rem;">
+      <div class="section-title">AI Investigation Console</div>
+      <p class="muted" style="margin-bottom:1rem;">
+        Ask natural language questions about this system — alerts, models, datasets, pipelines,
+        thresholds, and deployment. The RAG engine searches the built-in knowledge base and
+        returns a direct answer with source references.
+      </p>
+
+      <label for="inv-question" class="label" style="display:block;margin-bottom:0.5rem;">Question</label>
+      <div style="display:flex;gap:0.5rem;">
+        <input
+          id="inv-question"
+          class="input-field"
+          type="text"
+          placeholder="e.g. How does the alert threshold work?"
+          onkeydown="if(event.key==='Enter') runQuery()"
+        >
+        <button class="btn btn-primary" id="inv-ask-btn" onclick="runQuery()">Ask</button>
+      </div>
+
+      <div class="quick-chips">
+        <span class="label" style="align-self:center;">Quick:</span>
+        <span class="chip" onclick="setQuestion('How do alerts work?')">Alerts</span>
+        <span class="chip" onclick="setQuestion('What model is used for anomaly detection?')">Model</span>
+        <span class="chip" onclick="setQuestion('Tell me about the dataset')">Dataset</span>
+        <span class="chip" onclick="setQuestion('What is the anomaly score threshold?')">Threshold</span>
+        <span class="chip" onclick="setQuestion('How does the sliding window work?')">Window</span>
+        <span class="chip" onclick="setQuestion('How do I run with Docker?')">Docker</span>
+        <span class="chip" onclick="setQuestion('How does Prometheus metrics work?')">Prometheus</span>
+        <span class="chip" onclick="setQuestion('What is Grafana showing?')">Grafana</span>
+      </div>
+
+      <span id="inv-status" class="muted" style="font-size:0.75rem;"></span>
+    </div>
+
+    <!-- Results -->
+    <div id="inv-results" style="display:none;">
+      <div class="two-col">
+        <div class="answer-box">
+          <div class="answer-box-label">Answer</div>
+          <div class="answer-text" id="inv-answer-text"></div>
+        </div>
+        <div class="answer-box">
+          <div class="answer-box-label">Source Documents</div>
+          <div id="inv-sources"></div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- =================================================================
+       Section 4: Health
+       ================================================================= -->
+  <section id="section-health">
+
+    <!-- Overall status -->
+    <div class="card" style="margin-bottom:1rem;">
+      <div class="toolbar" style="margin-bottom:0.75rem;">
+        <div class="section-title" style="margin-bottom:0;">System Status</div>
+        <button class="btn btn-ghost" onclick="loadHealth()">Refresh</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
+        <div>
+          <div class="label" style="margin-bottom:0.4rem;">Overall Health</div>
+          <span class="badge" id="health-badge" style="font-size:0.85rem;padding:0.3rem 0.8rem;">Unknown</span>
+        </div>
+        <div>
+          <div class="label" style="margin-bottom:0.4rem;">Uptime</div>
+          <div class="uptime-large" id="health-uptime">--</div>
+        </div>
+        <div>
+          <div class="label" style="margin-bottom:0.4rem;">API Endpoint</div>
+          <span class="badge healthy">Available</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Component status -->
+    <div class="card" style="margin-bottom:1rem;">
+      <div class="section-title">Component Status</div>
+      <div class="component-grid" id="health-components">
+        <div class="muted">Loading...</div>
+      </div>
+    </div>
+
+    <!-- Endpoint availability -->
+    <div class="card" style="margin-bottom:1rem;">
+      <div class="section-title">Endpoint Availability</div>
+      <div id="health-endpoints">
+        <div class="status-row">
+          <span class="status-name">GET /health</span>
+          <span class="status-val" id="ep-health">Checking...</span>
+        </div>
+        <div class="status-row">
+          <span class="status-name">GET /alerts</span>
+          <span class="status-val" id="ep-alerts">Checking...</span>
+        </div>
+        <div class="status-row">
+          <span class="status-name">GET /metrics</span>
+          <span class="status-val" id="ep-metrics">Checking...</span>
+        </div>
+        <div class="status-row">
+          <span class="status-name">POST /query</span>
+          <span class="status-val" id="ep-query">Checking...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Raw health JSON -->
+    <div class="card">
+      <div class="section-title">Raw Health Response</div>
+      <button class="collapsible-toggle" onclick="toggleRaw('health-raw-body')">
+        <span>Show / Hide raw JSON</span>
+      </button>
+      <div class="collapsible-body" id="health-raw-body">
+        <pre class="raw-box" id="health-raw-json">Loading...</pre>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- =================================================================
+       Section 5: Metrics
+       ================================================================= -->
+  <section id="section-metrics">
+
+    <div class="card" style="margin-bottom:1rem;">
+      <div class="toolbar" style="margin-bottom:0.75rem;">
+        <div class="section-title" style="margin-bottom:0;">Observability Metrics</div>
+        <button class="btn btn-ghost" onclick="loadMetrics()">Refresh</button>
+      </div>
+      <p class="muted">
+        Live counters scraped from the Prometheus <code>/metrics</code> endpoint.
+        Grafana (port 3000) and Prometheus (port 9090) are available when running
+        <code>docker compose up</code>.
+      </p>
+    </div>
+
+    <!-- Key counters -->
+    <div class="stat-grid" style="margin-bottom:1rem;">
+      <div class="stat-card accent-cyan">
+        <div class="stat-label">Events Ingested</div>
+        <div class="stat-value" id="met-events">--</div>
+        <div class="stat-sub">ingest_events_total</div>
+      </div>
+      <div class="stat-card accent-blue">
+        <div class="stat-label">Windows Scored</div>
+        <div class="stat-value" id="met-windows">--</div>
+        <div class="stat-sub">ingest_windows_total</div>
+      </div>
+      <div class="stat-card accent-red">
+        <div class="stat-label">Ingest Errors</div>
+        <div class="stat-value" id="met-errors">--</div>
+        <div class="stat-sub">ingest_errors_total</div>
+      </div>
+    </div>
+
+    <!-- Alert counters by severity -->
+    <div class="card" style="margin-bottom:1rem;">
+      <div class="section-title">Alerts by Severity</div>
+      <div id="met-alerts-rows">
+        <div class="metric-row">
+          <span class="metric-name">alerts_total{severity="critical"}</span>
+          <span class="metric-value" id="met-crit">--</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-name">alerts_total{severity="high"}</span>
+          <span class="metric-value" id="met-high">--</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-name">alerts_total{severity="medium"}</span>
+          <span class="metric-value" id="met-medium">--</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-name">alerts_total{severity="low"}</span>
+          <span class="metric-value" id="met-low">--</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Latency -->
+    <div class="card" style="margin-bottom:1rem;">
+      <div class="section-title">Latency (Average)</div>
+      <div class="metric-row">
+        <span class="metric-name">ingest_latency_seconds (avg)</span>
+        <span class="metric-value" id="met-ingest-lat">--</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-name">scoring_latency_seconds (avg)</span>
+        <span class="metric-value" id="met-score-lat">--</span>
+      </div>
+    </div>
+
+    <!-- External links -->
+    <div class="card" style="margin-bottom:1rem;">
+      <div class="section-title">Observability Stack</div>
+      <div class="status-row">
+        <span class="status-name">Prometheus</span>
+        <span class="muted">http://localhost:9090 &mdash; scrapes /metrics every 15s</span>
+      </div>
+      <div class="status-row">
+        <span class="status-name">Grafana</span>
+        <span class="muted">http://localhost:3000 &mdash; Stage 08 dashboard (admin/admin)</span>
+      </div>
+      <div class="status-row">
+        <span class="status-name">Metrics endpoint</span>
+        <span class="muted">/metrics &mdash; Prometheus text format</span>
+      </div>
+    </div>
+
+    <!-- Raw Prometheus output -->
+    <div class="card">
+      <div class="section-title">Raw Prometheus Output</div>
+      <button class="collapsible-toggle" onclick="toggleRaw('metrics-raw-body')">
+        <span>Show / Hide raw /metrics output</span>
+      </button>
+      <div class="collapsible-body" id="metrics-raw-body">
+        <pre class="raw-box" id="metrics-raw-text">Loading...</pre>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<!-- ===================================================================
+     Footer
+     =================================================================== -->
+<footer>
+  <span>Predictive Log Anomaly Engine &mdash; Phase 8 Observability Dashboard</span>
+  <span id="footer-time" class="mono"></span>
+</footer>
+
+</div><!-- /app-shell -->
+
+<!-- ===================================================================
+     JavaScript
+     =================================================================== -->
+<script>
+'use strict';
+
+/* ------------------------------------------------------------------
+   Application state
+   ------------------------------------------------------------------ */
+const state = {
+  alerts: [],
+  health: null,
+  metricsText: '',
+  alertFilter: 'all',
+  lastRefresh: null,
+};
+
+/* ------------------------------------------------------------------
+   Tab navigation
+   ------------------------------------------------------------------ */
+function showTab(name) {
+  document.querySelectorAll('nav.tabs .tab').forEach((t, i) => {
+    const tabs = ['dashboard', 'alerts', 'investigation', 'health', 'metrics'];
+    t.classList.toggle('active', tabs[i] === name);
+  });
+  document.querySelectorAll('main section').forEach(s => {
+    s.classList.toggle('active', s.id === 'section-' + name);
+  });
+  // Trigger fresh renders for section-specific data
+  if (name === 'health')   renderHealth();
+  if (name === 'metrics')  renderMetrics();
+  if (name === 'alerts')   renderAlertsTable();
+  if (name === 'dashboard') renderDashboard();
+}
+
+/* ------------------------------------------------------------------
+   Collapsible toggle
+   ------------------------------------------------------------------ */
+function toggleRaw(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+
+/* ------------------------------------------------------------------
+   Utility helpers
+   ------------------------------------------------------------------ */
+function fmt(n) {
+  if (n === null || n === undefined) return '--';
+  if (typeof n === 'number') return n.toLocaleString();
+  return String(n);
+}
+
+function fmtScore(s) {
+  return (typeof s === 'number') ? s.toFixed(4) : '--';
+}
+
+function fmtTs(ts) {
+  if (!ts) return '--';
+  try {
+    const d = new Date(ts * 1000);
+    return d.toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+  } catch (_) { return String(ts); }
+}
+
+function fmtUptime(s) {
+  if (s === null || s === undefined) return '--';
+  s = Math.floor(s);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (h > 0) return h + 'h ' + m + 'm ' + sec + 's';
+  if (m > 0) return m + 'm ' + sec + 's';
+  return sec + 's';
+}
+
+function fmtLat(ms) {
+  if (ms === null || ms === undefined) return '--';
+  if (ms < 1) return (ms * 1000).toFixed(1) + ' ms';
+  return ms.toFixed(3) + ' s';
+}
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function truncate(s, n) {
+  if (!s) return '--';
+  s = String(s);
+  return s.length > n ? s.slice(0, n) + '...' : s;
+}
+
+function severityClass(sev) {
+  const s = (sev || 'low').toLowerCase();
+  if (['critical','high','medium','low'].includes(s)) return s;
+  return 'info';
+}
+
+/* ------------------------------------------------------------------
+   Prometheus text parser
+   ------------------------------------------------------------------ */
+function parsePromMetric(text, name) {
+  // Matches:  name 1.0   OR   name{label="x"} 1.0
+  const re = new RegExp('^' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') +
+    '(?:\\{[^}]*\\})? ([\\d.e+\\-]+)', 'm');
+  const m = text.match(re);
+  return m ? parseFloat(m[1]) : null;
+}
+
+function parsePromMetricLabel(text, name, labelKey, labelVal) {
+  // Matches:  name{...,labelKey="labelVal",...} 1.0
+  const re = new RegExp(
+    '^' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') +
+    '\\{[^}]*' + labelKey + '="' + labelVal + '"[^}]*\\} ([\\d.e+\\-]+)', 'm'
+  );
+  const m = text.match(re);
+  return m ? parseFloat(m[1]) : null;
+}
+
+/* ------------------------------------------------------------------
+   Data fetching
+   ------------------------------------------------------------------ */
+async function fetchHealth() {
+  try {
+    const r = await fetch('/health');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    state.health = await r.json();
+    document.getElementById('ep-health').textContent = 'OK';
+    document.getElementById('ep-health').className = 'status-val ok';
+  } catch (e) {
+    state.health = null;
+    const el = document.getElementById('ep-health');
+    if (el) { el.textContent = 'Error'; el.className = 'status-val err'; }
+  }
+}
+
+async function fetchAlerts() {
+  try {
+    const r = await fetch('/alerts');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    state.alerts = (data.alerts || []).slice().reverse(); // newest first
+    document.getElementById('ep-alerts').textContent = 'OK';
+    document.getElementById('ep-alerts').className = 'status-val ok';
+    // Update tab badge
+    const badge = document.getElementById('tab-alerts-count');
+    if (badge) badge.textContent = String(state.alerts.length);
+  } catch (e) {
+    const el = document.getElementById('ep-alerts');
+    if (el) { el.textContent = 'Error'; el.className = 'status-val err'; }
+  }
+}
+
+async function fetchMetrics() {
+  try {
+    const r = await fetch('/metrics');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    state.metricsText = await r.text();
+    document.getElementById('ep-metrics').textContent = 'OK';
+    document.getElementById('ep-metrics').className = 'status-val ok';
+  } catch (e) {
+    state.metricsText = '';
+    const el = document.getElementById('ep-metrics');
+    if (el) { el.textContent = 'Error'; el.className = 'status-val err'; }
+  }
+}
+
+async function pingQuery() {
+  try {
+    const r = await fetch('/query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: 'ping' }),
+    });
+    const el = document.getElementById('ep-query');
+    if (el) {
+      el.textContent = r.ok ? 'OK' : 'HTTP ' + r.status;
+      el.className = 'status-val ' + (r.ok ? 'ok' : 'warn');
+    }
+  } catch (e) {
+    const el = document.getElementById('ep-query');
+    if (el) { el.textContent = 'Error'; el.className = 'status-val err'; }
+  }
+}
+
+/* ------------------------------------------------------------------
+   Refresh all data
+   ------------------------------------------------------------------ */
+async function refreshAll() {
+  const spinner = document.getElementById('dash-spinner');
+  if (spinner) spinner.style.display = 'inline-block';
+
+  await Promise.all([fetchHealth(), fetchAlerts(), fetchMetrics()]);
+
+  state.lastRefresh = new Date();
+
+  if (spinner) spinner.style.display = 'none';
+
+  // Re-render whichever section is visible
+  const active = document.querySelector('main section.active');
+  if (active) {
+    const name = active.id.replace('section-', '');
+    if (name === 'dashboard')     renderDashboard();
+    if (name === 'alerts')        renderAlertsTable();
+    if (name === 'health')        renderHealth();
+    if (name === 'metrics')       renderMetrics();
+  }
+
+  // Always update header dot
+  updateHeaderStatus();
+  // Always update dashboard stats (tab badge etc.)
+  renderDashboard();
+
+  // Footer timestamp
+  const ft = document.getElementById('footer-time');
+  if (ft) ft.textContent = 'Last refresh: ' + new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+}
+
+/* ------------------------------------------------------------------
+   Health-specific load (for Health tab refresh button)
+   ------------------------------------------------------------------ */
+async function loadHealth() {
+  await Promise.all([fetchHealth(), pingQuery()]);
+  renderHealth();
+  updateHeaderStatus();
+}
+
+async function loadAlerts(rerender) {
+  await fetchAlerts();
+  if (rerender) renderAlertsTable();
+  renderDashboard();
+  const badge = document.getElementById('tab-alerts-count');
+  if (badge) badge.textContent = String(state.alerts.length);
+}
+
+async function loadMetrics() {
+  await fetchMetrics();
+  renderMetrics();
+}
+
+/* ------------------------------------------------------------------
+   Header status dot
+   ------------------------------------------------------------------ */
+function updateHeaderStatus() {
+  const dot = document.getElementById('hdr-dot');
+  const txt = document.getElementById('hdr-status-text');
+  if (!dot || !txt) return;
+  if (!state.health) {
+    dot.className = 'dot';
+    txt.textContent = 'Unreachable';
+    return;
+  }
+  const s = (state.health.status || '').toLowerCase();
+  dot.className = 'dot ' + (s === 'healthy' ? 'healthy' : s === 'degraded' ? 'degraded' : 'unhealthy');
+  txt.textContent = s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/* ------------------------------------------------------------------
+   Dashboard render
+   ------------------------------------------------------------------ */
+function renderDashboard() {
+  // Events + windows from metrics
+  const evts = parsePromMetric(state.metricsText, 'ingest_events_total');
+  const wins = parsePromMetric(state.metricsText, 'ingest_windows_total');
+  setEl('dash-events', evts !== null ? evts.toLocaleString() : '--');
+  setEl('dash-windows', wins !== null ? wins.toLocaleString() : '--');
+
+  // Alerts count
+  const alertCount = state.alerts.length;
+  setEl('dash-alerts', String(alertCount));
+
+  // Health
+  const hs = state.health;
+  if (hs) {
+    const s = (hs.status || '').toLowerCase();
+    setEl('dash-health-val', hs.status || '--');
+    const hv = document.getElementById('dash-health-val');
+    if (hv) {
+      hv.style.color = s === 'healthy' ? '#10b981' : s === 'degraded' ? '#f59e0b' : '#ef4444';
+    }
+    setEl('dash-uptime', 'uptime: ' + fmtUptime(hs.uptime_seconds));
+  }
+
+  // Engine mode
+  const modeEl = document.getElementById('dash-mode');
+  if (modeEl) {
+    // Try to get from health components
+    let mode = '--';
+    if (hs && hs.components && hs.components.model_mode) {
+      mode = hs.components.model_mode;
+    } else if (hs && hs.components) {
+      // Probe for mode info elsewhere in components
+      const m = JSON.stringify(hs.components).match(/"model":\s*"([^"]+)"/);
+      if (m) mode = m[1];
+    }
+    modeEl.textContent = mode;
+  }
+
+  // Severity counts from metrics
+  const critVal   = parsePromMetricLabel(state.metricsText, 'alerts_total', 'severity', 'critical') || 0;
+  const highVal   = parsePromMetricLabel(state.metricsText, 'alerts_total', 'severity', 'high')     || 0;
+  const medVal    = parsePromMetricLabel(state.metricsText, 'alerts_total', 'severity', 'medium')   || 0;
+  const lowVal    = parsePromMetricLabel(state.metricsText, 'alerts_total', 'severity', 'low')      || 0;
+  const total     = critVal + highVal + medVal + lowVal || 1;
+
+  // Severity pill counts
+  const sevEl = document.getElementById('dash-sev-counts');
+  if (sevEl) {
+    if (critVal + highVal + medVal + lowVal === 0) {
+      sevEl.innerHTML = '<span class="muted">No alerts fired</span>';
+    } else {
+      sevEl.innerHTML = [
+        critVal > 0 ? '<span class="badge critical">' + critVal + ' critical</span>' : '',
+        highVal > 0 ? '<span class="badge high">'     + highVal + ' high</span>'     : '',
+        medVal  > 0 ? '<span class="badge medium">'   + medVal  + ' medium</span>'   : '',
+        lowVal  > 0 ? '<span class="badge low">'      + lowVal  + ' low</span>'      : '',
+      ].filter(Boolean).join(' ');
+    }
+  }
+
+  // Severity bar segments
+  const segs = document.querySelectorAll('#dash-sev-bar .sev-seg');
+  if (segs.length === 4) {
+    segs[0].style.width = (critVal / total * 100).toFixed(1) + '%';
+    segs[1].style.width = (highVal / total * 100).toFixed(1) + '%';
+    segs[2].style.width = (medVal  / total * 100).toFixed(1) + '%';
+    segs[3].style.width = (lowVal  / total * 100).toFixed(1) + '%';
+  }
+  setEl('leg-critical', 'Critical: ' + critVal);
+  setEl('leg-high',     'High: '     + highVal);
+  setEl('leg-medium',   'Medium: '   + medVal);
+  setEl('leg-low',      'Low: '      + lowVal);
+
+  // Recent alerts mini-table (last 5)
+  const recent = state.alerts.slice(0, 5);
+  const wrap = document.getElementById('dash-recent-alerts');
+  if (!wrap) return;
+  if (!recent.length) {
+    wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">&#9888;</div><div class="empty-msg">No alerts yet &mdash; system is monitoring.</div></div>';
+    return;
+  }
+  wrap.innerHTML =
+    '<div class="table-wrap"><table>' +
+    '<thead><tr><th>Time (UTC)</th><th>Severity</th><th>Service</th><th>Score</th><th>Alert ID</th></tr></thead>' +
+    '<tbody>' +
+    recent.map(a => {
+      const sev = severityClass(a.severity);
+      return '<tr>' +
+        '<td class="primary mono" style="font-size:0.75rem;">' + fmtTs(a.timestamp) + '</td>' +
+        '<td><span class="badge ' + sev + '">' + sev + '</span></td>' +
+        '<td class="primary">' + escHtml(a.service || '--') + '</td>' +
+        '<td class="mono">' + fmtScore(a.score) + '</td>' +
+        '<td class="mono" style="color:#9ca3af;font-size:0.72rem;">' + escHtml(truncate(a.alert_id || '--', 20)) + '</td>' +
+        '</tr>';
+    }).join('') +
+    '</tbody></table></div>' +
+    (state.alerts.length > 5
+      ? '<p class="muted" style="margin-top:0.5rem;font-size:0.72rem;">Showing 5 of ' + state.alerts.length + ' alerts. See the Alerts tab for all.</p>'
+      : '');
+}
+
+/* ------------------------------------------------------------------
+   Alerts table render
+   ------------------------------------------------------------------ */
+let alertFilter = 'all';
+
+function setAlertFilter(sev, btn) {
+  alertFilter = sev;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderAlertsTable();
+}
+
+function renderAlertsTable() {
+  const wrap = document.getElementById('alerts-table-wrap');
+  const countBadge = document.getElementById('alerts-count-badge');
+  if (!wrap) return;
+
+  const filtered = alertFilter === 'all'
+    ? state.alerts
+    : state.alerts.filter(a => (a.severity || '').toLowerCase() === alertFilter);
+
+  if (countBadge) {
+    countBadge.textContent = state.alerts.length + ' alert' + (state.alerts.length !== 1 ? 's' : '');
+  }
+
+  if (!filtered.length) {
+    wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">&#9888;</div>' +
+      '<div class="empty-msg">' + (alertFilter === 'all' ? 'No alerts in buffer.' : 'No ' + alertFilter + ' alerts.') + '</div></div>';
+    return;
+  }
+
+  wrap.innerHTML =
+    '<table>' +
+    '<thead><tr>' +
+    '<th>Time (UTC)</th>' +
+    '<th>Severity</th>' +
+    '<th>Service</th>' +
+    '<th>Score</th>' +
+    '<th>Threshold</th>' +
+    '<th>Model</th>' +
+    '<th>Alert ID</th>' +
+    '<th>Evidence</th>' +
+    '</tr></thead>' +
+    '<tbody>' +
+    filtered.map(a => {
+      const sev = severityClass(a.severity);
+      const ev  = a.evidence_window ? JSON.stringify(a.evidence_window) : '{}';
+      return '<tr>' +
+        '<td class="primary mono" style="font-size:0.72rem;white-space:nowrap;">' + fmtTs(a.timestamp) + '</td>' +
+        '<td><span class="badge ' + sev + '">' + sev + '</span></td>' +
+        '<td class="primary">' + escHtml(a.service || '--') + '</td>' +
+        '<td class="primary mono">' + fmtScore(a.score) + '</td>' +
+        '<td class="mono">' + fmtScore(a.threshold) + '</td>' +
+        '<td class="mono" style="font-size:0.72rem;">' + escHtml(a.model_name || '--') + '</td>' +
+        '<td class="mono" style="color:#9ca3af;font-size:0.68rem;">' + escHtml(truncate(a.alert_id || '--', 18)) + '</td>' +
+        '<td style="color:#6b7280;font-size:0.72rem;" title="' + escHtml(ev) + '">' + escHtml(truncate(ev, 60)) + '</td>' +
+        '</tr>';
+    }).join('') +
+    '</tbody></table>';
+}
+
+/* ------------------------------------------------------------------
+   Health render
+   ------------------------------------------------------------------ */
+function renderHealth() {
+  const hs = state.health;
+  const badge = document.getElementById('health-badge');
+  const uptime = document.getElementById('health-uptime');
+  const comps = document.getElementById('health-components');
+  const rawJson = document.getElementById('health-raw-json');
+
+  if (!hs) {
+    if (badge) { badge.textContent = 'Unknown'; badge.className = 'badge unknown'; }
+    if (comps) comps.innerHTML = '<span class="muted">Health data unavailable.</span>';
+    if (rawJson) rawJson.textContent = 'Unavailable';
+    return;
+  }
+
+  // Status badge
+  if (badge) {
+    const s = (hs.status || '').toLowerCase();
+    badge.textContent = hs.status || 'Unknown';
+    badge.className   = 'badge ' + (s === 'healthy' ? 'healthy' : s === 'degraded' ? 'degraded' : 'unhealthy');
+  }
+
+  // Uptime
+  if (uptime) uptime.textContent = fmtUptime(hs.uptime_seconds);
+
+  // Components
+  if (comps && hs.components) {
+    comps.innerHTML = Object.entries(hs.components).map(([k, v]) => {
+      let statusClass = 'muted';
+      let display = typeof v === 'object' ? JSON.stringify(v) : String(v);
+      const lower = display.toLowerCase();
+      if (lower === 'true' || lower === 'ok' || lower === 'healthy') statusClass = 'ok';
+      else if (lower === 'false' || lower === 'error' || lower === 'unhealthy') statusClass = 'err';
+      else if (lower === 'degraded' || lower === 'warn') statusClass = 'warn';
+      // Shorten booleans for display
+      if (display === 'true')  display = 'Ready';
+      if (display === 'false') display = 'Not Ready';
+      return '<div class="component-card">' +
+        '<div class="component-name">' + escHtml(k.replace(/_/g, ' ')) + '</div>' +
+        '<div class="component-status ' + statusClass + '">' + escHtml(truncate(display, 40)) + '</div>' +
+        '</div>';
+    }).join('');
+  } else if (comps) {
+    comps.innerHTML = '<span class="muted">No component data.</span>';
+  }
+
+  // Raw JSON
+  if (rawJson) {
+    rawJson.textContent = JSON.stringify(hs, null, 2);
+  }
+}
+
+/* ------------------------------------------------------------------
+   Metrics render
+   ------------------------------------------------------------------ */
+function renderMetrics() {
+  const t = state.metricsText;
+
+  const evts = parsePromMetric(t, 'ingest_events_total');
+  const wins = parsePromMetric(t, 'ingest_windows_total');
+  const errs = parsePromMetric(t, 'ingest_errors_total');
+  const crit = parsePromMetricLabel(t, 'alerts_total', 'severity', 'critical');
+  const high = parsePromMetricLabel(t, 'alerts_total', 'severity', 'high');
+  const med  = parsePromMetricLabel(t, 'alerts_total', 'severity', 'medium');
+  const low  = parsePromMetricLabel(t, 'alerts_total', 'severity', 'low');
+
+  setEl('met-events',  evts !== null ? evts.toLocaleString() : '--');
+  setEl('met-windows', wins !== null ? wins.toLocaleString() : '--');
+  setEl('met-errors',  errs !== null ? errs.toLocaleString() : '--');
+  setEl('met-crit',   crit !== null ? crit.toLocaleString() : '--');
+  setEl('met-high',   high !== null ? high.toLocaleString() : '--');
+  setEl('met-medium', med  !== null ? med.toLocaleString()  : '--');
+  setEl('met-low',    low  !== null ? low.toLocaleString()  : '--');
+
+  // Average latency = sum / count
+  const iSum = parsePromMetric(t, 'ingest_latency_seconds_sum');
+  const iCnt = parsePromMetric(t, 'ingest_latency_seconds_count');
+  const sSum = parsePromMetric(t, 'scoring_latency_seconds_sum');
+  const sCnt = parsePromMetric(t, 'scoring_latency_seconds_count');
+  const avgIngest  = (iSum !== null && iCnt && iCnt > 0) ? iSum / iCnt : null;
+  const avgScoring = (sSum !== null && sCnt && sCnt > 0) ? sSum / sCnt : null;
+
+  setEl('met-ingest-lat', avgIngest  !== null ? fmtLat(avgIngest)  : '--');
+  setEl('met-score-lat',  avgScoring !== null ? fmtLat(avgScoring) : '--');
+
+  // Raw text
+  const rawEl = document.getElementById('metrics-raw-text');
+  if (rawEl) rawEl.textContent = t || 'Metrics unavailable.';
+}
+
+/* ------------------------------------------------------------------
+   Investigation / RAG query
+   ------------------------------------------------------------------ */
+async function runQuery() {
+  const q = document.getElementById('inv-question').value.trim();
+  if (!q) return;
+
+  const btn = document.getElementById('inv-ask-btn');
+  const status = document.getElementById('inv-status');
+  btn.disabled = true;
+  status.textContent = 'Searching knowledge base...';
+
+  try {
+    const r = await fetch('/query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: q }),
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+
+    document.getElementById('inv-answer-text').textContent = data.answer || '--';
+
+    const srcEl = document.getElementById('inv-sources');
+    srcEl.innerHTML = (data.sources || []).map(s =>
+      '<div class="source-item">' +
+        '<div class="source-meta">' +
+          '<span class="source-id">' + escHtml(s.id) + '</span>' +
+          '<span class="source-score">relevance: ' + fmtScore(s.score) + '</span>' +
+        '</div>' +
+        '<div class="source-snippet">' + escHtml(s.snippet) + '</div>' +
+      '</div>'
+    ).join('');
+
+    document.getElementById('inv-results').style.display = 'block';
+    status.textContent = '';
+  } catch (e) {
+    status.textContent = 'Error: ' + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function setQuestion(q) {
+  document.getElementById('inv-question').value = q;
+  document.getElementById('inv-question').focus();
+}
+
+/* ------------------------------------------------------------------
+   DOM helpers
+   ------------------------------------------------------------------ */
+function setEl(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
+/* ------------------------------------------------------------------
+   Auto-refresh timer (30 seconds)
+   ------------------------------------------------------------------ */
+let _refreshInterval;
+function startAutoRefresh() {
+  clearInterval(_refreshInterval);
+  _refreshInterval = setInterval(refreshAll, 30000);
+}
+
+/* ------------------------------------------------------------------
+   Init
+   ------------------------------------------------------------------ */
+async function init() {
+  await refreshAll();
+  await pingQuery();
+  startAutoRefresh();
+}
+
+init();
+</script>
+
+</body>
+</html>

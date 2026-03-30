@@ -1,0 +1,14 @@
+# grafana/provisioning/dashboards/dashboards.yml
+
+apiVersion: 1
+
+# Define the dashboard providers for Grafana
+providers:
+  - name: "Stage 08 Dashboards"
+    orgId: 1
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards

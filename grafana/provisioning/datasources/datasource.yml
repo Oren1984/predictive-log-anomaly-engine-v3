@@ -1,0 +1,13 @@
+# grafana/provisioning/datasources/datasource.yml
+
+apiVersion: 1
+
+# Define the data sources for Grafana
+datasources:
+  - name: Prometheus
+    type: prometheus
+    uid: prometheus-stage8
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false

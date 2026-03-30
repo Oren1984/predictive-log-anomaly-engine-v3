@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "Bash(ls:*)",
+      "Bash(du:*)",
+      "Bash(grep:*)",
+      "Bash(chmod +x:*)",
+      "Bash(pip install:*)",
+      "Bash(sed:*)",
+      "Bash(mkdir:*)",
+      "Bash(/tmp/tree_summary.txt:*)",
+      "Read(//tmp/**)",
+      "Bash(find /c/Users/ORENS -name \"*.docx\" 2>/dev/null | head -30; find /c/Users/ORENS/Downloads -name \"*.docx\" 2>/dev/null; find /c/Users/ORENS/Desktop -name \"*.docx\" 2>/dev/null)",
+      "Bash(find /c/Users/ORENS -maxdepth 5 -name \"*Predictive*\" -o -name \"*Anomaly*\" -o -name \"*Pipeline*\" -o -name \"*Refactor*\" -o -name \"*UI Development*\" 2>/dev/null | head -20)",
+      "Bash(find /c/Users/ORENS/predictive-log-anomaly-engine-v2/training -type f -name \"*.py\" 2>/dev/null | head -20)",
+      "Bash(find /c/Users/ORENS/predictive-log-anomaly-engine-v2/data -type f \\\\\\( -name \"*.json\" -o -name \"*.pkl\" -o -name \"*.csv\" \\\\\\) 2>/dev/null | head -30)",
+      "Bash(find /c/Users/ORENS/predictive-log-anomaly-engine-v2/scripts -type f -name \"*.py\" 2>/dev/null | head -20)",
+      "Bash(head -100 /c/Users/ORENS/predictive-log-anomaly-engine-v2/data/processed/events_tokenized.parquet | xxd | head -30)",
+      "Bash(find /c/Users/ORENS/predictive-log-anomaly-engine-v2 -name \"*.md\" -path \"*/data/*\" -o -name \"schema*\" -type f 2>/dev/null | head -10)",
+      "Bash(find /c/Users/ORENS/predictive-log-anomaly-engine-v2 -name \"*preprocess*\" -type f 2>/dev/null | head -10)",
+      "Bash(pip index:*)",
+      "Bash(docker build:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker stop:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/health)",
+      "Bash(curl:*)",
+      "Bash(docker start:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(echo \"exit: $?\")"
+    ]
+  }
+}

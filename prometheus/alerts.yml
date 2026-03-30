@@ -1,0 +1,70 @@
+# prometheus/alerts.yml
+#
+# Alert rules for the Predictive Log Anomaly Engine.
+# Loaded by prometheus.yml via rule_files.
+#
+# Severity labels follow the Prometheus community convention:
+#   critical  — service is down or data loss is occurring
+#   warning   — degraded performance or elevated error rates
+
+groups:
+  - name: anomaly-engine
+    rules:
+
+      # ── Service availability ────────────────────────────────────────────
+      - alert: ServiceDown
+        expr: up{job="anomaly-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Anomaly API is unreachable"
+          description: >
+            Prometheus cannot scrape the anomaly detection API at {{ $labels.instance }}.
+            The service has been down for more than 1 minute.
+            Check: docker compose ps / docker compose logs api
+
+      # ── Application health state ────────────────────────────────────────
+      - alert: ServiceUnhealthy
+        expr: service_health < 1.0
+        for: 2m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Anomaly API health is degraded or unhealthy"
+          description: >
+            service_health = {{ $value }} (1.0=healthy, 0.5=degraded, 0.0=unhealthy).
+            This reflects the /health endpoint component checks
+            (inference engine loaded, alert manager reachable).
+            Duration: has been below 1.0 for more than 2 minutes.
+
+      # ── Ingestion errors ────────────────────────────────────────────────
+      - alert: HighIngestErrorRate
+        expr: rate(ingest_errors_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          team: ml-platform
+        annotations:
+          summary: "Elevated ingest error rate on anomaly API"
+          description: >
+            Ingest error rate is {{ $value | humanize }}/s (threshold: 0.1/s).
+            Errors in POST /ingest may indicate model failures, malformed events,
+            or resource exhaustion.
+            Check: GET /health and application logs for stack traces.
+
+      # ── Ingest stall ─────────────────────────────────────────────────────
+      - alert: IngestStalled
+        expr: rate(ingest_events_total[5m]) == 0
+        for: 5m
+        labels:
+          severity: warning
+          team: ml-platform
+        annotations:
+          summary: "No events ingested in the last 5 minutes"
+          description: >
+            ingest_events_total has not increased in 5 minutes.
+            This may indicate the upstream event source has stopped sending data,
+            or the API is rejecting all requests (check auth, network, upstream service).

@@ -1,0 +1,37 @@
+ASSETS NEEDED — Predictive Log Anomaly Engine V2 Showcase
+==========================================================
+
+To upgrade the site from "impressive demo" to "proof of real system",
+add these screenshots and replace the placeholders noted below.
+
+
+1. grafana-dashboard.png
+   Source: Run `docker compose up` then open http://localhost:3000
+   Capture: Full Grafana dashboard with anomaly score + alert panels
+   Replace: The simulated Grafana block in the #results section
+   How: Remove the .grafana-placeholder div and add:
+        <img src="assets/grafana-dashboard.png" alt="Grafana Dashboard" style="width:100%;border-radius:12px;"/>
+
+
+2. fastapi-docs.png
+   Source: http://localhost:8000/docs (Swagger UI)
+   Capture: Full page showing all endpoints (/ingest, /v2/ingest, /alerts, /health)
+   Use in: Results section or Architecture section callout
+
+
+3. terminal-demo.png
+   Source: Run the demo script, capture terminal output
+   Shows: Log ingestion → window emitted → anomaly scored → alert fired
+   Use in: Results section as "proof of run"
+
+
+4. n8n-outbox.png (optional)
+   Source: ls artifacts/n8n_outbox/*.json after running demo
+   Shows: Alert JSON files written to disk (dry-run mode proof)
+   Use in: Results section to prove alert dispatch works
+
+
+NOTES:
+- All placeholders in the site are clearly marked
+- The simulated Grafana dashboard in the site works without real screenshots
+- Priority: grafana-dashboard.png has highest impact

@@ -1,0 +1,31 @@
+# requirements.txt
+
+# Purpose: This file lists the production dependencies for the project. 
+# It includes the necessary libraries and frameworks required for the application to run in a production environment.
+
+# Input: This file is used to set up the production environment with the necessary dependencies. 
+# It can be installed using pip with the command `pip install -r requirements.txt`.
+
+# Output: A production environment with all necessary dependencies installed for the application to run smoothly.
+
+# Used by: Deployment scripts and production environments to ensure that all required libraries are installed for the application to function correctly.
+
+# Core dependencies for the application
+fastapi>=0.115.6
+uvicorn>=0.41.0
+httpx>=0.28.1
+prometheus-client>=0.24.1
+
+# Additional dependencies for data processing and machine learning
+numpy>=2.4.0
+pandas>=3.0.0
+scikit-learn>=1.8.0
+torch>=2.10.0
+pyarrow>=23.0.1
+psutil>=7.2.2
+
+# NLP embedding (Stage 1 — LogPreprocessor)
+gensim>=4.3.0
+
+# V3 Semantic layer (loaded only when SEMANTIC_ENABLED=true)
+sentence-transformers>=2.7.0

@@ -1,0 +1,28 @@
+{
+  "alert_id": "3f8a2d1c-4b5e-4c2a-9d1f-0e8f7a6b5c4d",
+  "severity": "critical",
+  "service": "hdfs",
+  "score": 132.54,
+  "timestamp": 1704067200.0,
+  "evidence_window": {
+    "templates_preview": [
+      "tid=6675: <NUM> <NUM> <NUM> INFO dfs.DataNode$DataXceiver: Receiving block",
+      "tid=6684: <NUM> <NUM> <NUM> INFO dfs.DataNode$PacketResponder: PacketResponder",
+      "tid=6695: <NUM> <NUM> <NUM> INFO dfs.FSNamesystem: BLOCK* NameSystem.delete",
+      "tid=6701: <NUM> <NUM> <NUM> WARN dfs.DataNode$DataXceiver: IOException in",
+      "tid=6664: <NUM> <NUM> <NUM> INFO dfs.DataBlockScanner: Verification succeeded"
+    ],
+    "token_count": 50,
+    "start_ts": 1704067150.0,
+    "end_ts": 1704067200.0
+  },
+  "model_name": "ensemble",
+  "threshold": 1.0,
+  "meta": {
+    "stream_key": "hdfs:",
+    "is_anomaly": true,
+    "window_size": 50,
+    "emit_index": 42,
+    "label": 1
+  }
+}

@@ -1,0 +1,41 @@
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual env
+.venv/
+.env
+
+# Data (ALL heavy outputs)
+data/raw/
+data/intermediate/
+data/processed/*.csv
+data/processed/*.parquet
+
+# Models
+models/
+
+# Reports (keep only markdown)
+reports/*.csv
+reports/*.json
+reports/*.jsonl
+artifacts/*.json
+
+# N8N outbox (test artifacts — accumulate on every dry-run)
+artifacts/n8n_outbox/*.json
+
+# AI workspace (legacy experiment directory — not part of the live source tree)
+ai_workspace/
+
+# Claude temp cwd markers
+tmpclaude-*-cwd
+
+# Synthetic data
+data/synth/
+
+# Windows junk
+nul
+reports/*.tmp

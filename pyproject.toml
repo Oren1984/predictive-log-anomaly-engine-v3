@@ -1,0 +1,7 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts   = "--tb=short"
+markers   = [
+    "slow: model/data-file-dependent tests; skip in fast dev loops with '-m not slow'",
+    "integration: API integration tests that use the FastAPI TestClient",
+]

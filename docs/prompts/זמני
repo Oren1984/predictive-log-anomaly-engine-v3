@@ -1,0 +1,19 @@
+Continue exactly from where you stopped.
+
+You already completed Phase 6 semantic scaffold work and wrote:
+`docs/PHASE_6_V3_SEMANTIC_SCAFFOLD_REPORT.md`
+
+Resume from the current repository state without repeating completed work.
+
+Tasks now:
+
+1. verify the Phase 6 changes are fully saved
+2. do a quick final consistency check on the created semantic scaffold files and tests
+3. if anything in Phase 6 is still unfinished, complete it
+4. then stop and provide a short completion summary only
+
+Important:
+
+* do not restart Phase 6 from the beginning
+* do not repeat already completed work
+* do not move to Phase 7 yet unless Phase 6 is fully complete and explicitly confirmed

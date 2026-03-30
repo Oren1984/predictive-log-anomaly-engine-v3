@@ -1,0 +1,165 @@
+# .github/workflows/ci.yml
+# CI workflow for anomaly-api
+
+name: CI
+
+on:
+  push:
+    branches: ["main", "dev"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  tests:
+    name: Lint + Tests (Python 3.11)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install -U pip
+          pip install -r requirements/requirements.txt
+          pip install -r requirements/requirements-dev.txt
+
+      - name: Lint (flake8 — informational)
+        run: |
+          flake8 src/ scripts/ \
+            --max-line-length 120 \
+            --extend-ignore E203,W503,E501 \
+            --count --statistics \
+            --exit-zero
+
+      - name: Run pytest (fast suite — skip slow model-dependent tests)
+        run: python -m pytest --tb=short -q -m "not slow"
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: tests
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: pip-audit (dependency CVE check)
+        run: pip-audit -r requirements/requirements.txt --skip-editable || true
+
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@0.20.0
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          severity: "HIGH,CRITICAL"
+          exit-code: "0"
+          format: "table"
+
+  docker:
+    name: Docker Build + Smoke Test
+    runs-on: ubuntu-latest
+    needs: tests
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare empty model directories for CI
+        run: mkdir -p models artifacts
+
+      - name: Build API image
+        run: docker build -f docker/Dockerfile -t anomaly-api:ci .
+
+      - name: Start compose stack
+        run: docker compose -f docker/docker-compose.yml up -d --build
+
+      - name: Wait for /health (up to 90s)
+        run: |
+          echo "Waiting for API to be ready..."
+          for i in $(seq 1 18); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/health || echo "000")
+            echo "  attempt $i: HTTP $STATUS"
+            if [ "$STATUS" = "200" ]; then
+              echo "API is up."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "ERROR: API did not respond within 90 seconds"
+          docker compose -f docker/docker-compose.yml logs api
+          exit 1
+
+      - name: Smoke test /health
+        run: |
+          curl -sf http://localhost:8000/health
+          echo ""
+          echo "Health check passed."
+
+      - name: Smoke test /metrics
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/metrics)
+          echo "GET /metrics -> HTTP $STATUS"
+          test "$STATUS" = "200"
+
+      - name: Smoke test ingest -> alert
+        run: |
+          echo "Posting 10 events to /ingest (DEMO_MODE; WINDOW_SIZE=10, STRIDE=1)..."
+          for i in $(seq 1 10); do
+            R=$(curl -s -o /tmp/ingest_resp.txt -w "%{http_code}" \
+              -X POST http://localhost:8000/ingest \
+              -H "Content-Type: application/json" \
+              -d '{"service":"ci-smoke","token_id":1}')
+            echo "  event $i -> HTTP $R"
+            if [ "$R" != "200" ]; then
+              echo "Ingest response body:"
+              cat /tmp/ingest_resp.txt
+              echo ""
+              echo "API logs:"
+              docker compose -f docker/docker-compose.yml logs api
+              exit 1
+            fi
+          done
+
+          echo "Checking /alerts..."
+          ALERTS=$(curl -sf http://localhost:8000/alerts)
+          echo "  $ALERTS"
+          COUNT=$(echo "$ALERTS" | python3 -c "import sys,json; print(json.load(sys.stdin)['count'])")
+          echo "Alert count: $COUNT"
+          test "$COUNT" -ge 1
+
+      - name: Smoke test Demo UI (GET /)
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/)
+          echo "GET / -> HTTP $STATUS"
+          test "$STATUS" = "200"
+
+      - name: Smoke test /query (RAG stub)
+        run: |
+          RESP=$(curl -sf -X POST http://localhost:8000/query \
+            -H "Content-Type: application/json" \
+            -d '{"question":"How do alerts work?"}')
+          echo "$RESP"
+          echo "$RESP" | python3 -c "
+          import sys, json
+          d = json.load(sys.stdin)
+          assert 'answer' in d, 'Missing answer key'
+          assert 'sources' in d, 'Missing sources key'
+          print('Query endpoint OK.')
+          "
+
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker/docker-compose.yml down -v
