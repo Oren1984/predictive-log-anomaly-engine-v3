@@ -42,6 +42,12 @@ RUN mkdir -p data/intermediate
 # builds successfully in CI even when those gitignored directories are absent.
 RUN mkdir -p models artifacts
 
+# Hugging Face model cache — populated at runtime via volume mount.
+# Setting HF_HOME here ensures sentence-transformers uses this path
+# consistently whether the layer is enabled or not.
+ENV HF_HOME=/app/.cache/huggingface
+RUN mkdir -p /app/.cache/huggingface
+
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 

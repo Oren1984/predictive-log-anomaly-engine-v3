@@ -103,6 +103,10 @@ async def ingest_event(body: IngestRequest, request: Request) -> IngestResponse:
             model_name=a["model_name"],
             threshold=a["threshold"],
             meta=a.get("meta", {}),
+            explanation=a.get("explanation"),
+            semantic_similarity=a.get("semantic_similarity"),
+            top_similar_events=a.get("top_similar_events"),
+            evidence_tokens=a.get("evidence_tokens"),
         )
 
     return IngestResponse(
@@ -135,6 +139,10 @@ async def list_alerts(request: Request) -> AlertListResponse:
             model_name=a["model_name"],
             threshold=a["threshold"],
             meta=a.get("meta", {}),
+            explanation=a.get("explanation"),
+            semantic_similarity=a.get("semantic_similarity"),
+            top_similar_events=a.get("top_similar_events"),
+            evidence_tokens=a.get("evidence_tokens"),
         )
         for a in raw
     ]

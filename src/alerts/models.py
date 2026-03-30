@@ -62,9 +62,15 @@ class Alert:
     threshold: float
     meta: dict = field(default_factory=dict)
 
+    # V3 Semantic enrichment — all optional, None when semantic layer is disabled.
+    explanation: Optional[str] = None
+    semantic_similarity: Optional[float] = None
+    top_similar_events: Optional[list] = None
+    evidence_tokens: Optional[list] = None
+
     def to_dict(self) -> dict:
         """Serialisable dict suitable for JSON / n8n payload."""
-        return {
+        d: dict = {
             "alert_id":       self.alert_id,
             "severity":       self.severity,
             "service":        self.service,
@@ -74,7 +80,13 @@ class Alert:
             "model_name":     self.model_name,
             "threshold":      self.threshold,
             "meta":           self.meta,
+            # Semantic fields — included when set (None serialises cleanly to null)
+            "explanation":          self.explanation,
+            "semantic_similarity":  self.semantic_similarity,
+            "top_similar_events":   self.top_similar_events,
+            "evidence_tokens":      self.evidence_tokens,
         }
+        return d
 
 
 @dataclass

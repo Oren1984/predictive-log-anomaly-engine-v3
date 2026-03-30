@@ -96,6 +96,25 @@ class MetricsRegistry:
         )
         self.service_health.set(1.0)
 
+        # V3 Semantic layer metrics
+        self.semantic_enrichments_total = Counter(
+            "semantic_enrichments_total",
+            "Total alerts enriched by the V3 semantic layer",
+            registry=self.registry,
+        )
+        self.semantic_enrichment_latency_seconds = Histogram(
+            "semantic_enrichment_latency_seconds",
+            "Latency of V3 semantic enrichment per alert in seconds",
+            buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0),
+            registry=self.registry,
+        )
+        self.semantic_model_ready = Gauge(
+            "semantic_model_ready",
+            "1 when the V3 semantic model is loaded and ready, 0 otherwise",
+            registry=self.registry,
+        )
+        self.semantic_model_ready.set(0.0)
+
     def generate_text(self) -> tuple[str, str]:
         """Return (body, content_type) for the /metrics endpoint."""
         return (

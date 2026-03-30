@@ -73,6 +73,13 @@ class AlertSchema(BaseModel):
     threshold: float
     meta: dict[str, Any] = Field(default_factory=dict)
 
+    # V3 Semantic enrichment — optional; None when semantic layer is disabled.
+    # Adding as Optional with default=None preserves full backward compatibility.
+    explanation: Optional[str] = None
+    semantic_similarity: Optional[float] = None
+    top_similar_events: Optional[list[Any]] = None
+    evidence_tokens: Optional[list[Any]] = None
+
 
 # ---------------------------------------------------------------------------
 # Responses
@@ -106,3 +113,30 @@ class HealthResponse(BaseModel):
     status: str
     uptime_seconds: float
     components: dict[str, Any]
+
+
+# ---------------------------------------------------------------------------
+# V3 Semantic schemas
+# ---------------------------------------------------------------------------
+
+class ExplanationResponse(BaseModel):
+    """Response from GET /v3/alerts/{alert_id}/explanation."""
+
+    alert_id: str
+    semantic_enabled: bool
+    explanation: Optional[str] = None
+    evidence_tokens: Optional[list[Any]] = None
+    semantic_similarity: Optional[float] = None
+    top_similar_events: Optional[list[Any]] = None
+
+
+class ModelsInfoResponse(BaseModel):
+    """Response from GET /v3/models/info."""
+
+    inference_mode: str
+    artifacts_loaded: bool
+    semantic_enabled: bool
+    semantic_model: str
+    semantic_model_loaded: bool
+    explanation_enabled: bool
+    v2_engine_available: bool

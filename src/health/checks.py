@@ -86,6 +86,17 @@ class HealthChecker:
             "size": len(self._pipeline._alert_buffer) if buffer_ok else 0,
         }
 
+        # ----------------------------------------------------------------
+        # V3 Semantic layer — informational, never degrades overall status
+        # ----------------------------------------------------------------
+        semantic_cfg = getattr(self._pipeline, "_semantic_config", None)
+        semantic_loader = getattr(self._pipeline, "_semantic_loader", None)
+        components["semantic"] = {
+            "enabled": semantic_cfg.semantic_enabled if semantic_cfg else False,
+            "model_loaded": semantic_loader.is_ready if semantic_loader else False,
+            "model_name": semantic_cfg.semantic_model if semantic_cfg else "n/a",
+        }
+
         uptime_s = round(time.time() - self._start_time, 1)
 
         return {

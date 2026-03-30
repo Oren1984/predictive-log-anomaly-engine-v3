@@ -28,7 +28,15 @@
       "Bash(curl:*)",
       "Bash(docker start:*)",
       "Bash(git check-ignore:*)",
-      "Bash(echo \"exit: $?\")"
+      "Bash(echo \"exit: $?\")",
+      "Bash(find /c/Users/ORENS/predictive-log-anomaly-engine-v3 -name PHASE_6* -o -name *semantic*)",
+      "Bash(git:*)",
+      "Bash(docker info:*)",
+      "Bash(docker images:*)",
+      "Bash(netstat -ano)",
+      "Bash(docker run:*)",
+      "Bash(H=http://localhost:8001 ALERT_ID=\"62b29fe1-da4c-4368-8008-ade6f1540c5b\" __NEW_LINE_d9d184aeedcb6a62__ echo \"=== /v3/alerts/$ALERT_ID/explanation ===\" curl -sf $H/v3/alerts/$ALERT_ID/explanation)",
+      "Bash(docker rm:*)"
     ]
   }
 }

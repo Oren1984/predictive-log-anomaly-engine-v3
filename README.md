@@ -288,6 +288,43 @@ DevOps, QA, Backend Engineering, Frontend Development, UI Design, Architecture D
 
 ---
 
+## V3 Semantic Layer
+
+The V3 semantic layer is integrated into the pipeline and exposed through dedicated API endpoints.
+It is **disabled by default** (`SEMANTIC_ENABLED=false`) and can be enabled independently of the V1/V2 inference backbone.
+
+### V3 API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/v3/ingest` | POST | Versioned ingest with explicit semantic fields in the alert response |
+| `/v3/alerts/{alert_id}/explanation` | GET | Semantic explanation for a specific alert |
+| `/v3/models/info` | GET | Inference mode and semantic layer status |
+
+### Enabling V3 Semantic Enrichment
+
+Set `SEMANTIC_ENABLED=true` in your environment (or `docker-compose.yml`):
+
+```bash
+SEMANTIC_ENABLED=true docker compose -f docker/docker-compose.yml up
+```
+
+On first run with semantic enabled, the `all-MiniLM-L6-v2` sentence-transformers model (~90 MB) is downloaded
+from Hugging Face and cached in `hf_cache/` (persisted via volume mount).
+
+### V3 Alert Fields (when semantic enabled)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `explanation` | `str` | Rule-based text description of the anomaly |
+| `evidence_tokens` | `list` | Template snippets that triggered the explanation |
+| `semantic_similarity` | `float` | Cosine similarity to most similar prior alert |
+| `top_similar_events` | `list` | Top-3 most similar historical alerts |
+
+See `docs/V3_ARCHITECTURE.md` for the full design.
+
+---
+
 ## Project Status
 
 Current repository status:
@@ -300,11 +337,11 @@ Current repository status:
 - Docker deployment implemented
 - evaluation framework implemented
 - investigation UI implemented
-- V3 semantic scaffold added as the foundation for future semantic enrichment and explanation-aware workflows
+- V3 semantic layer integrated: explanation, similarity, and V3 API endpoints added (Phase 8)
 
-The project currently preserves the working V1/V2 backbone while preparing the next V3 integration layer in a modular and backward-compatible way.
+The project preserves the working V1/V2 backbone with a fully modular V3 semantic enrichment layer.
 
-**All tests passing (578 tests)** and full containerized runtime included.
+**All tests passing (557+ tests)** and full containerized runtime included.
 
 ---
 

@@ -35,6 +35,11 @@ services:
       # Warmup: ingest 75 synthetic events on startup so the demo is alive immediately.
       DEMO_WARMUP_ENABLED: "true"
       DEMO_WARMUP_EVENTS: "75"
+      # V3 Semantic layer — disabled by default (CPU-friendly).
+      # Set to "true" to enable explanation and similarity enrichment.
+      # Requires sentence-transformers model download on first run (~90MB CPU model).
+      SEMANTIC_ENABLED: "false"
+      HF_HOME: "/app/.cache/huggingface"
     volumes:
       # All paths below are relative to this file's directory (docker/).
       # "../" ascends to the repo root where the real directories live.
@@ -44,6 +49,9 @@ services:
       # data/intermediate/ is excluded from the Docker image by .dockerignore,
       # so we inject it here as a read-only volume.
       - ../data/intermediate:/app/data/intermediate:ro
+      # V3 Semantic layer: Hugging Face model cache persisted across container restarts.
+      # Remove this volume to force a fresh model download.
+      - ../hf_cache:/app/.cache/huggingface
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 15s

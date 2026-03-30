@@ -32,6 +32,7 @@ from ..security.auth import AuthMiddleware
 from .pipeline import Pipeline
 from .routes import router
 from .routes_v2 import router_v2
+from .routes_v3 import router_v3
 from .settings import Settings
 from .ui import ui_router
 
@@ -194,6 +195,7 @@ def create_app(
     # ------------------------------------------------------------------
     app.include_router(router)
     app.include_router(router_v2)
+    app.include_router(router_v3)
     app.include_router(ui_router)
 
     return app

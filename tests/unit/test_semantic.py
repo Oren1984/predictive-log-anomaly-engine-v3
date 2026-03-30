@@ -1,13 +1,13 @@
 # tests/unit/test_semantic.py
 #
-# Unit tests for the V3 semantic scaffolding layer (src/semantic/).
+# Unit tests for the V3 semantic layer (src/semantic/).
 #
 # Design:
 #   - All tests use mocked sentence-transformers so the test suite runs
 #     without requiring the heavy model download.
 #   - Tests verify inert behaviour when SEMANTIC_ENABLED=false (the default).
 #   - Tests verify correct delegation when SEMANTIC_ENABLED=true with a mock.
-#   - No integration with the runtime pipeline or API (Phase 6 scope).
+#   - Phase 7: additional tests for SemanticSimilarity and RuleBasedExplainer.
 
 from __future__ import annotations
 
@@ -24,7 +24,9 @@ sys.path.insert(0, str(ROOT))
 
 from src.semantic.config import SemanticConfig
 from src.semantic.embeddings import SemanticEmbedder
+from src.semantic.explainer import RuleBasedExplainer
 from src.semantic.loader import SemanticModelLoader
+from src.semantic.similarity import SemanticSimilarity
 
 
 # ---------------------------------------------------------------------------
@@ -301,3 +303,138 @@ class TestSemanticPackageImport:
         import src.semantic  # noqa: F401  — must not raise
         cfg = SemanticConfig()
         assert cfg.semantic_enabled is False
+
+
+# ---------------------------------------------------------------------------
+# SemanticSimilarity tests (Phase 7)
+# ---------------------------------------------------------------------------
+
+class TestSemanticSimilarity:
+    def setup_method(self):
+        self.sim = SemanticSimilarity()
+
+    def _unit(self, *values: float) -> np.ndarray:
+        """Return a float32 vector from given values."""
+        return np.array(values, dtype=np.float32)
+
+    def test_identical_vectors_return_one(self):
+        v = self._unit(1.0, 0.0, 0.0)
+        assert abs(self.sim.compute(v, v) - 1.0) < 1e-6
+
+    def test_orthogonal_vectors_return_zero(self):
+        a = self._unit(1.0, 0.0)
+        b = self._unit(0.0, 1.0)
+        assert abs(self.sim.compute(a, b)) < 1e-6
+
+    def test_opposite_vectors_return_minus_one(self):
+        a = self._unit(1.0, 0.0)
+        b = self._unit(-1.0, 0.0)
+        assert abs(self.sim.compute(a, b) - (-1.0)) < 1e-6
+
+    def test_zero_vector_returns_zero(self):
+        zero = self._unit(0.0, 0.0, 0.0)
+        other = self._unit(1.0, 2.0, 3.0)
+        assert self.sim.compute(zero, other) == 0.0
+        assert self.sim.compute(other, zero) == 0.0
+
+    def test_top_k_empty_candidates_returns_empty(self):
+        result = self.sim.top_k(self._unit(1.0, 0.0), candidates=[], k=3)
+        assert result == []
+
+    def test_top_k_sorted_by_score_descending(self):
+        query = self._unit(1.0, 0.0)
+        candidates = [
+            ("low", self._unit(0.0, 1.0)),    # orthogonal → score ≈ 0
+            ("high", self._unit(1.0, 0.0)),   # identical → score ≈ 1
+            ("mid", self._unit(1.0, 1.0)),    # 45° → score ≈ 0.707
+        ]
+        result = self.sim.top_k(query, candidates, k=3)
+        assert len(result) == 3
+        assert result[0]["text"] == "high"
+        assert result[1]["text"] == "mid"
+        assert result[2]["text"] == "low"
+
+    def test_top_k_respects_k_limit(self):
+        query = self._unit(1.0, 0.0)
+        candidates = [(f"item{i}", self._unit(float(i), 0.0)) for i in range(10)]
+        result = self.sim.top_k(query, candidates, k=3)
+        assert len(result) == 3
+
+    def test_top_k_result_has_text_and_score_keys(self):
+        query = self._unit(1.0, 0.0)
+        candidates = [("alpha", self._unit(1.0, 0.0))]
+        result = self.sim.top_k(query, candidates, k=1)
+        assert "text" in result[0]
+        assert "score" in result[0]
+        assert isinstance(result[0]["score"], float)
+
+
+# ---------------------------------------------------------------------------
+# RuleBasedExplainer tests (Phase 7)
+# ---------------------------------------------------------------------------
+
+class TestRuleBasedExplainer:
+    def setup_method(self):
+        self.exp = RuleBasedExplainer()
+
+    def _explain(self, templates=None, token_count=0) -> dict:
+        ew = {"templates_preview": templates or [], "token_count": token_count}
+        return self.exp.explain(ew)
+
+    def test_returns_explanation_string(self):
+        result = self._explain(["normal startup sequence"], token_count=10)
+        assert isinstance(result["explanation"], str)
+        assert len(result["explanation"]) > 0
+
+    def test_returns_evidence_tokens_list(self):
+        result = self._explain(["disk error detected"], token_count=5)
+        assert isinstance(result["evidence_tokens"], list)
+
+    def test_error_keyword_detected(self):
+        result = self._explain(["Connection timeout on db-01"], token_count=10)
+        assert "error-indicative" in result["explanation"]
+        assert len(result["evidence_tokens"]) >= 1
+
+    def test_multiple_error_templates_counted(self):
+        templates = [
+            "HDFS: failed to allocate block",
+            "SSH: exception in handler",
+            "Service timeout after 30s",
+        ]
+        result = self._explain(templates, token_count=3)
+        assert "3" in result["explanation"] or "error-indicative" in result["explanation"]
+
+    def test_no_error_keywords_gives_generic_message(self):
+        # 3+ unique templates, no error keywords, moderate token_count → no rule fires
+        templates = [
+            "info: heartbeat ok",
+            "info: stats flushed",
+            "info: connection established",
+        ]
+        result = self._explain(templates, token_count=20)
+        assert "threshold" in result["explanation"] or "rule" in result["explanation"]
+        assert result["evidence_tokens"] == []
+
+    def test_low_diversity_flagged(self):
+        # Only 1 unique template but token_count > 0 → diversity rule fires
+        result = self._explain(["same template"] * 5, token_count=5)
+        assert "diversity" in result["explanation"]
+
+    def test_high_density_flagged(self):
+        result = self._explain(["info: heartbeat ok"], token_count=100)
+        assert "density" in result["explanation"] or "100" in result["explanation"]
+
+    def test_empty_window_flagged(self):
+        result = self._explain(templates=[], token_count=0)
+        assert "empty" in result["explanation"].lower() or "threshold" in result["explanation"].lower()
+
+    def test_evidence_tokens_capped_at_five(self):
+        templates = [f"error event {i}" for i in range(10)]
+        result = self._explain(templates, token_count=10)
+        assert len(result["evidence_tokens"]) <= 5
+
+    def test_empty_evidence_window_dict(self):
+        """explain() must not raise on an empty dict."""
+        result = self.exp.explain({})
+        assert isinstance(result["explanation"], str)
+        assert isinstance(result["evidence_tokens"], list)
