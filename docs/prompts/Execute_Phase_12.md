@@ -117,3 +117,12 @@ Style expectations:
 * Demo-friendly
 * Academic presentation appropriate
 * No exaggerated claims
+
+
+Before making edits, first list:
+
+* the static demo folder path
+* the files you plan to modify
+* a short reason for each planned change
+
+Then proceed with the update.
