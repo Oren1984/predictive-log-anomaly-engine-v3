@@ -1,4 +1,4 @@
-ASSETS NEEDED — Predictive Log Anomaly Engine V2 Showcase
+ASSETS NEEDED — Predictive Log Anomaly Engine V3 Showcase
 ==========================================================
 
 To upgrade the site from "impressive demo" to "proof of real system",
@@ -15,7 +15,7 @@ add these screenshots and replace the placeholders noted below.
 
 2. fastapi-docs.png
    Source: http://localhost:8000/docs (Swagger UI)
-   Capture: Full page showing all endpoints (/ingest, /v2/ingest, /alerts, /health)
+   Capture: Full page showing all endpoints (/ingest, /v2/ingest, /v3/ingest, /alerts, /health)
    Use in: Results section or Architecture section callout
 
 
@@ -35,3 +35,5 @@ NOTES:
 - All placeholders in the site are clearly marked
 - The simulated Grafana dashboard in the site works without real screenshots
 - Priority: grafana-dashboard.png has highest impact
+- V3 semantic enrichment fields (explanation, evidence_tokens, semantic_similarity)
+  are visible in the live demo simulation (pipeline step 9) when SEMANTIC_ENABLED=true

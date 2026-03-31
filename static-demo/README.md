@@ -1,14 +1,14 @@
-# Static Demo — Predictive Log Anomaly Engine V2
+# Static Demo — Predictive Log Anomaly Engine V3
 
-This folder contains a lightweight static showcase website built for the **Predictive Log Anomaly Engine V2** project.
+This folder contains a lightweight static showcase website built for the **Predictive Log Anomaly Engine V3** project.
 
 ---
 
 ## Purpose
 
-The static demo was created as a **presentation and demonstration layer** for the existing system.
+The static demo is a **presentation and demonstration layer** for the existing system.
 
-It does not replace the real project, model pipeline, notebook, or GPU-based execution flow.
+It does not replace the real project, model pipeline, notebooks, or runtime observability stack.
 
 Instead, it helps present the project in a clear and visual way during:
 
@@ -24,8 +24,8 @@ The static site visually summarizes the same system documented and implemented i
 
 - project overview and value proposition
 - problem framing: reactive monitoring vs. behavioral anomaly detection
-- architecture overview
-- 8-stage pipeline walkthrough
+- architecture overview (V1 + V2 + optional V3 semantic layer)
+- 9-stage pipeline walkthrough (V2 core pipeline + V3 semantic enrichment step)
 - live simulation of logs and alerts
 - results / observability section
 - technical stack summary
@@ -36,9 +36,9 @@ The static site visually summarizes the same system documented and implemented i
 
 This site is aligned with the full project artifacts, including:
 
-- project codebase
-- design/specification documents
-- Jupyter notebook demos
+- project codebase (`src/`)
+- design/specification documents (`docs/`)
+- Jupyter notebook demos (`notebooks/`)
 - GPU notebook execution flow
 - observability and monitoring setup
 
@@ -69,8 +69,10 @@ http://localhost:8080
 
 To strengthen the credibility of the demo, replace placeholder visuals with real project screenshots where available, especially:
 
-- Grafana dashboard
+- Grafana dashboard (`assets/grafana-dashboard.png`)
 - alert/output screenshots
-- architecture export if needed
+- FastAPI Swagger UI screenshot
+
+See `assets/ASSETS_NEEDED.txt` for instructions.
 
 ---

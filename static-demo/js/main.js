@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════
-   Predictive Log Anomaly Engine V2 — Main JS
+   Predictive Log Anomaly Engine V3 — Main JS
    Counter animations · Pipeline stepper
    Live simulation engine
 ═══════════════════════════════════════════ */
@@ -159,7 +159,7 @@ const PIPELINE_STEPS = [
     tagClass: 'tag-output',
     title: 'Severity Classification & Alert',
     description: 'The Severity MLP classifies the anomaly using the latent vector [32] + reconstruction error [1]. The AlertManager applies cooldown deduplication and dispatches to the outbox.',
-    detail: 'MLP input: [33]  ·  Classes: info / warning / critical  ·  Includes confidence score',
+    detail: 'MLP input: [33]  ·  V2 classifier labels: info / warning / critical  ·  V1 AlertPolicy labels: critical / high / medium / low',
     visual: `
       <div class="alert-card-demo critical">
         <div class="alert-header">
@@ -173,6 +173,28 @@ const PIPELINE_STEPS = [
           <div>Stream:&nbsp;<span class="val mono">namenode:session-12</span></div>
           <div>Output:&nbsp;<span class="val">artifacts/n8n_outbox/&lt;uuid&gt;.json</span></div>
         </div>
+      </div>`
+  },
+  {
+    num: '09',
+    tag: 'V3 — OPTIONAL',
+    tagClass: 'tag-ml',
+    title: 'V3 Semantic Enrichment',
+    description: 'When SEMANTIC_ENABLED=true, the V3 semantic layer enriches confirmed alerts with a natural-language explanation, evidence tokens, and cosine similarity against historical alerts — all attached to the alert response.',
+    detail: 'Model: all-MiniLM-L6-v2 (sentence-transformers, ~90 MB)  ·  CPU by default, GPU-capable  ·  No overhead when disabled',
+    visual: `
+      <div class="alert-card-demo" style="border-color:rgba(0,212,255,0.4);">
+        <div class="alert-header">
+          <span class="severity-badge" style="background:rgba(0,212,255,0.18);color:#00d4ff;">V3 ENRICHED</span>
+          <span class="alert-time">SEMANTIC_ENABLED=true</span>
+        </div>
+        <div class="alert-body">
+          <div>explanation:&nbsp;<span class="val">"Anomalous pattern: high error density, 4 distinct templates"</span></div>
+          <div>evidence_tokens:&nbsp;<span class="val mono">["PacketResponder: Exception", "BLOCK* NameSystem"]</span></div>
+          <div>semantic_similarity:&nbsp;<span class="val">0.923</span></div>
+          <div>top_similar_events:&nbsp;<span class="val mono">[{score: 0.923, ...}]</span></div>
+        </div>
+        <div style="margin-top:8px;font-size:10px;color:var(--text-dim);font-style:italic;">Fields are null when SEMANTIC_ENABLED=false (default)</div>
       </div>`
   }
 ];
