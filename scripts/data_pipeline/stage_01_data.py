@@ -1,4 +1,4 @@
-# scripts/stage_01_data.py
+# scripts/data_pipeline/stage_01_data.py
 
 # Purpose: This script is responsible for the first stage of the anomaly detection pipeline,
 # which involves loading, validating, and summarizing the raw unified dataset.
@@ -16,9 +16,9 @@
 Stage 01 — Data: validate and summarise the raw unified dataset.
 
 Usage:
-    python scripts/stage_01_data.py
-    python scripts/stage_01_data.py --mode demo  (first 5000 rows only)
-    python scripts/stage_01_data.py --mode full
+    python scripts/data_pipeline/stage_01_data.py
+    python scripts/data_pipeline/stage_01_data.py --mode demo  (first 5000 rows only)
+    python scripts/data_pipeline/stage_01_data.py --mode full
 """
 import argparse
 import logging
@@ -29,7 +29,7 @@ from pathlib import Path
 import pandas as pd
 import psutil
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
 from src.data_layer import KaggleDatasetLoader

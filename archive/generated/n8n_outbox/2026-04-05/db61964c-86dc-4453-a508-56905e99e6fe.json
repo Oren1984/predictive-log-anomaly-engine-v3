@@ -1,0 +1,32 @@
+{
+  "alert_id": "db61964c-86dc-4453-a508-56905e99e6fe",
+  "severity": "critical",
+  "service": "demo",
+  "score": 100.0,
+  "timestamp": 0.0,
+  "evidence_window": {
+    "templates_preview": [
+      "tid=1572: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL FATAL invalid operation exception (int cnvt)...<NUM>",
+      "tid=1886: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO CE sym <NUM>, at 0x003235c0, mask 0x20",
+      "tid=6970: KERNMNTF <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL FATAL Lustre mount FAILED : bglio289 : point <PA...",
+      "tid=3804: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO CE sym <NUM>, at 0x1b858ac0, mask 0x80",
+      "tid=7558: KERNMNTF <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL FATAL Lustre mount FAILED : bglio779 : point <PA..."
+    ],
+    "token_count": 10,
+    "start_ts": 0.0,
+    "end_ts": 0.0
+  },
+  "model_name": "baseline",
+  "threshold": 0.3303178258763508,
+  "meta": {
+    "stream_key": "demo:warmup-session",
+    "is_anomaly": true,
+    "window_size": 10,
+    "label": 0,
+    "emit_index": 60
+  },
+  "explanation": null,
+  "semantic_similarity": null,
+  "top_similar_events": null,
+  "evidence_tokens": null
+}

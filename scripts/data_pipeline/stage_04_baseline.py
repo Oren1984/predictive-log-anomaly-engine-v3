@@ -1,4 +1,4 @@
-# scripts/stage_04_baseline.py
+# scripts/data_pipeline/stage_04_baseline.py
 
 # Purpose: Train a baseline IsolationForest anomaly detection model on the sequence data, 
 # calibrate a threshold, and evaluate performance.
@@ -25,8 +25,8 @@ Writes : models/baseline.pkl
          reports/stage_04_baseline.md
 
 Usage:
-    python scripts/stage_04_baseline.py
-    python scripts/stage_04_baseline.py --mode demo
+    python scripts/data_pipeline/stage_04_baseline.py
+    python scripts/data_pipeline/stage_04_baseline.py --mode demo
 """
 import argparse
 import json
@@ -38,7 +38,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
 from src.sequencing import Sequence

@@ -1,0 +1,32 @@
+{
+  "alert_id": "dbe899f0-af92-4cd8-a5ec-dfc2295f2c87",
+  "severity": "critical",
+  "service": "demo",
+  "score": 100.0,
+  "timestamp": 0.0,
+  "evidence_window": {
+    "templates_preview": [
+      "tid=7033: KERNMNTF <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL FATAL Lustre mount FAILED : bglio342 : block_id ...",
+      "tid=4118: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO Kernel detected <HEX> integer alignment exceptions...",
+      "tid=7510: KERNMNTF <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL FATAL Lustre mount FAILED : bglio74 : block_id :...",
+      "tid=1725: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO <NUM> L3 directory error(s) (dcr 0x0152) detected ...",
+      "tid=6548: - <HEX> <DATE> UNKNOWN_LOCATION <TS> UNKNOWN_LOCATION NULL DISCOVERY INFO Node card VPD check: U11 n..."
+    ],
+    "token_count": 10,
+    "start_ts": 0.0,
+    "end_ts": 0.0
+  },
+  "model_name": "baseline",
+  "threshold": 0.3303178258763508,
+  "meta": {
+    "stream_key": "demo:warmup-session",
+    "is_anomaly": true,
+    "window_size": 10,
+    "label": 0,
+    "emit_index": 31
+  },
+  "explanation": null,
+  "semantic_similarity": null,
+  "top_similar_events": null,
+  "evidence_tokens": null
+}

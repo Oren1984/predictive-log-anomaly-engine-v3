@@ -1,0 +1,32 @@
+{
+  "alert_id": "f2a12484-2647-48e6-9e27-031b239eab07",
+  "severity": "critical",
+  "service": "demo",
+  "score": 100.0,
+  "timestamp": 0.0,
+  "evidence_window": {
+    "templates_preview": [
+      "tid=4066: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO Kernel detected <HEX> integer alignment exceptions...",
+      "tid=4645: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO Kernel detected <NUM> integer alignment exceptions...",
+      "tid=7076: KERNMNTF <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL FATAL Lustre mount FAILED : bglio377 : point <PA...",
+      "tid=7798: KERNMNTF <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL FATAL Lustre mount FAILED : bglio99 : block_id :...",
+      "tid=6709: APPCHILD <HEX> <DATE> <NODE> <TS> <NODE> RAS APP FATAL ciod: Error creating node map from file map.d..."
+    ],
+    "token_count": 10,
+    "start_ts": 0.0,
+    "end_ts": 0.0
+  },
+  "model_name": "baseline",
+  "threshold": 0.3303178258763508,
+  "meta": {
+    "stream_key": "demo:warmup-session",
+    "is_anomaly": true,
+    "window_size": 10,
+    "label": 0,
+    "emit_index": 11
+  },
+  "explanation": null,
+  "semantic_similarity": null,
+  "top_similar_events": null,
+  "evidence_tokens": null
+}

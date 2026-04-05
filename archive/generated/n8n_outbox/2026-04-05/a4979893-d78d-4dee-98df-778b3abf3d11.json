@@ -1,0 +1,32 @@
+{
+  "alert_id": "a4979893-d78d-4dee-98df-778b3abf3d11",
+  "severity": "critical",
+  "service": "demo",
+  "score": 100.0,
+  "timestamp": 0.0,
+  "evidence_window": {
+    "templates_preview": [
+      "tid=2288: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO CE sym <NUM>, at 0x048eef00, mask 0x02",
+      "tid=6680: <NUM> <NUM> <NUM> INFO dfs.DataNode$DataXceiver: writeBlock <BLK> received exception java.io.IOExcep...",
+      "tid=7814: KERNRTSP <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL FATAL rts panic! - stopping execution",
+      "tid=3753: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO CE sym <NUM>, at 0x1b787d00, mask 0x20",
+      "tid=489: - <HEX> <DATE> <NODE> <TS> <NODE> NULL DISCOVERY INFO Node card VPD check: U01 node in processor car..."
+    ],
+    "token_count": 10,
+    "start_ts": 0.0,
+    "end_ts": 0.0
+  },
+  "model_name": "baseline",
+  "threshold": 0.3303178258763508,
+  "meta": {
+    "stream_key": "demo:warmup-session",
+    "is_anomaly": true,
+    "window_size": 10,
+    "label": 0,
+    "emit_index": 5
+  },
+  "explanation": null,
+  "semantic_similarity": null,
+  "top_similar_events": null,
+  "evidence_tokens": null
+}

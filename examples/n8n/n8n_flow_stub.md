@@ -122,7 +122,7 @@ webhook path is configured.
 ```powershell
 $env:N8N_WEBHOOK_URL = "http://localhost:5678/webhook/anomaly-alert"
 $env:N8N_DRY_RUN = "false"
-python scripts/stage_06_demo_alerts.py --n-events 2000 --cooldown 0
+python scripts/data_pipeline/stage_06_demo_alerts.py --n-events 2000 --cooldown 0
 ```
 
 Or send a single test payload manually:

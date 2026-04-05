@@ -1,0 +1,32 @@
+{
+  "alert_id": "c7eea3f1-e86c-414e-8fdf-4036d3f781d9",
+  "severity": "critical",
+  "service": "demo",
+  "score": 100.0,
+  "timestamp": 0.0,
+  "evidence_window": {
+    "templates_preview": [
+      "tid=1969: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO CE sym <NUM>, at 0x00e1b080, mask 0x10",
+      "tid=1733: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO <NUM> torus receiver x+ input pipe error(s) (dcr 0...",
+      "tid=2705: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO CE sym <NUM>, at 0x09c438a0, mask 0x20",
+      "tid=7261: KERNMNTF <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL FATAL Lustre mount FAILED : bglio536 : point <PA...",
+      "tid=248: - <HEX> <DATE> <NODE> <TS> <NODE> NULL DISCOVERY INFO Node card VPD check: U01 node in processor car..."
+    ],
+    "token_count": 10,
+    "start_ts": 0.0,
+    "end_ts": 0.0
+  },
+  "model_name": "baseline",
+  "threshold": 0.3303178258763508,
+  "meta": {
+    "stream_key": "demo:warmup-session",
+    "is_anomaly": true,
+    "window_size": 10,
+    "label": 0,
+    "emit_index": 2
+  },
+  "explanation": null,
+  "semantic_similarity": null,
+  "top_similar_events": null,
+  "evidence_tokens": null
+}

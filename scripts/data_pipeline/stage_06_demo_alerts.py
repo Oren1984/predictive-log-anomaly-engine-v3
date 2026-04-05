@@ -1,4 +1,4 @@
-# scripts/stage_06_demo_alerts.py
+# scripts/data_pipeline/stage_06_demo_alerts.py
 
 # Purpose: Simulate live stream ingestion and fire alerts using the InferenceEngine and AlertManager.
 
@@ -29,10 +29,10 @@ Behaviour
 - No network calls are made unless N8N_DRY_RUN=false and N8N_WEBHOOK_URL is set.
 
 Usage:
-    python scripts/stage_06_demo_alerts.py
-    python scripts/stage_06_demo_alerts.py --n-events 2000
-    python scripts/stage_06_demo_alerts.py --n-events 2000 --model ensemble
-    python scripts/stage_06_demo_alerts.py --n-events 2000 --cooldown 0
+    python scripts/data_pipeline/stage_06_demo_alerts.py
+    python scripts/data_pipeline/stage_06_demo_alerts.py --n-events 2000
+    python scripts/data_pipeline/stage_06_demo_alerts.py --n-events 2000 --model ensemble
+    python scripts/data_pipeline/stage_06_demo_alerts.py --n-events 2000 --cooldown 0
 """
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ import sys
 import time
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
 import pandas as pd

@@ -1,0 +1,32 @@
+{
+  "alert_id": "137d0198-4727-4675-9a5d-7e760472bc43",
+  "severity": "critical",
+  "service": "demo",
+  "score": 100.0,
+  "timestamp": 0.0,
+  "evidence_window": {
+    "templates_preview": [
+      "tid=3463: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO CE sym <NUM>, at 0x16d9d8c0, mask 0x02",
+      "tid=4066: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO Kernel detected <HEX> integer alignment exceptions...",
+      "tid=7378: KERNMNTF <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL FATAL Lustre mount FAILED : bglio628 : block_id ...",
+      "tid=1153: - <HEX> <DATE> <NODE> <TS> <NODE> NULL HARDWARE WARNING PrepareForService shutting down LinkCard(mLc...",
+      "tid=4123: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO Kernel detected <NUM> integer alignment exceptions..."
+    ],
+    "token_count": 10,
+    "start_ts": 0.0,
+    "end_ts": 0.0
+  },
+  "model_name": "baseline",
+  "threshold": 0.3303178258763508,
+  "meta": {
+    "stream_key": "demo:warmup-session",
+    "is_anomaly": true,
+    "window_size": 10,
+    "label": 0,
+    "emit_index": 29
+  },
+  "explanation": null,
+  "semantic_similarity": null,
+  "top_similar_events": null,
+  "evidence_tokens": null
+}

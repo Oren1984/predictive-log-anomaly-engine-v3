@@ -63,7 +63,7 @@ def _import_calibrate():
     import importlib
     spec = importlib.util.spec_from_file_location(
         "stage_05_runtime_calibrate",
-        ROOT / "scripts" / "stage_05_runtime_calibrate.py",
+        ROOT / "archive" / "scripts" / "stage_05_runtime_calibrate.py",
     )
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)

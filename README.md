@@ -1,362 +1,146 @@
-﻿# Predictive Log Anomaly Engine v3
+# Predictive Log Anomaly Engine v3
 
-AI-powered observability, anomaly detection, and semantic enrichment system for software logs.
-
-The **Predictive Log Anomaly Engine** analyzes behavioral patterns in log streams,
-detects abnormal activity before full service failure occurs,
-and is evolving into a **hybrid AI observability platform** with semantic and explanation-aware capabilities.
+An AI-driven log anomaly detection platform that identifies system instability before failures occur — by analyzing behavioral patterns in log streams rather than static thresholds.
 
 ---
 
-## Tech Stack
+## What This Project Does
 
-Python • FastAPI • Docker • Prometheus • Grafana • PyTorch • Sentence Transformers • Pytest • GitHub Actions
+Traditional monitoring catches failures after they happen. This system works earlier.
 
----
+It analyzes behavioral patterns in log streams — not just error counts or infrastructure metrics — and flags deviations before they escalate. Logs are parsed, sequenced, and scored through a multi-stage ML pipeline. When anomaly thresholds are crossed, alerts are generated, deduplicated, and forwarded in real time.
 
-## Overview
-
-Traditional monitoring systems usually detect failures only after they already impact the system, for example through CPU spikes, crashes, or error bursts.
-
-The Predictive Log Anomaly Engine takes a more proactive approach by analyzing behavioral log patterns rather than relying only on infrastructure metrics.
-
-The platform currently combines:
-
-- parsing and normalization of raw logs
-- template extraction and event sequencing
-- anomaly detection through behavioral modeling
-- severity scoring and alert generation
-- FastAPI runtime services
-- Prometheus and Grafana observability
-- a growing V3 semantic layer for future explanation-aware enrichment
-
-The project is evolving from a pure anomaly detection engine into a **hybrid AI observability system** that preserves the existing V1/V2 runtime backbone while adding semantic capabilities in a modular way.
+A modular V3 semantic layer adds optional explanation and similarity enrichment on top of the core runtime — without replacing it.
 
 ---
 
 ## Key Capabilities
 
-- Real-time log anomaly detection using behavioral sequence analysis
-- Multi-stage AI inference pipeline
-- Severity scoring and alert generation
-- FastAPI service exposing ingestion and investigation endpoints
-- Prometheus metrics and Grafana dashboards
-- Docker-based deployment
-- CI/CD validation with automated tests
-- Interactive demonstration notebooks
-- V3 semantic scaffold prepared for Hugging Face-based enrichment and explanation workflows
+- Real-time log anomaly detection via behavioral sequence analysis
+- Multi-stage ML pipeline for behavioral anomaly detection and severity scoring
+- Three versioned API paths (V1, V2, V3) with backward compatibility
+- Alert pipeline with deduplication, cooldown, and n8n webhook forwarding
+- Prometheus metrics + Grafana dashboards out of the box
+- Optional semantic explanation layer (V3) powered by Sentence Transformers
+- Fully Dockerized — single command to run the complete stack
 
 ---
 
-## System Architecture
+## System Flow
 
-The system currently follows a full AI runtime pipeline:
+Raw Logs → Parsing → Sequence → Model → Anomaly → Alert → Metrics
 
-Logs
-↓
-Parsing & Template Mining
-↓
-Sequence Builder
-↓
-Embedding Generation (Word2Vec / behavioral features)
-↓
-Behavior Modeling
-↓
-Autoencoder Anomaly Detection
-↓
-Severity Classification
-↓
-Alert Manager
-↓
-FastAPI Service
-↓
-Prometheus + Grafana
-↓
-Investigation UI
+(Detailed pipeline includes embedding, autoencoder, and severity classification.)
 
-V3 direction adds an optional semantic enrichment layer on top of confirmed anomaly results,
-enabling future explanation-aware workflows without replacing the existing runtime backbone.
+V3 adds an optional semantic enrichment step after anomaly confirmation: explanation text, evidence tokens, and similarity scoring against prior alerts.
 
 ---
 
-## Main Components
+## Architecture Snapshot
 
-### Parsing & Template Mining
+| Layer             | Technology                                    |
+|-------------------|-----------------------------------------------|
+| API backend       | FastAPI (versioned: V1 / V2 / V3)             |
+| Inference engines | V1 rolling-window + V2 four-stage ML pipeline |
+| Semantic layer    | Sentence Transformers (`all-MiniLM-L6-v2`)    |
+| Observability     | Prometheus + Grafana                          |
+| Runtime           | Docker Compose                                |
 
-Transforms raw logs into structured templates that reduce noise while preserving behavioral patterns.
-
----
-
-### Sequence Builder
-
-Builds event windows and behavioral sequences that represent operational system activity.
-
----
-
-### Embedding Engine
-
-Uses **Word2Vec embeddings** to convert log templates into semantic vector representations.
-
----
-
-### Behavior Model
-
-Learns normal operational sequences using a deep learning behavioral model.
-
----
-
-### Autoencoder Anomaly Detector
-
-Detects abnormal patterns by measuring reconstruction error from learned normal behavior.
-
----
-
-### Severity Classifier
-
-Assigns severity levels to detected anomalies based on learned patterns and rule-based signals.
-
----
-
-### Alert Manager
-
-Generates alerts with severity levels and handles alert lifecycle management.
-
----
-
-### FastAPI Runtime Service
-
-Provides:
-
-- ingestion endpoints
-- system health signals
-- alert queries
-- investigation endpoints
-- UI serving
-
----
-
-### Observability Layer
-
-The project integrates a full observability stack:
-
-- Prometheus metrics collection
-- Grafana dashboards
-- system health visibility
-- ingestion monitoring
-- alert activity monitoring
-
----
-
-### Demo Notebooks
-
-The repository includes interactive demonstration notebooks for system explanation, visualization, and walkthrough purposes.
-
-These notebooks help demonstrate:
-
-- log ingestion simulation
-- anomaly scoring visualization
-- runtime behavior analysis
-- system evolution from V2 anomaly detection toward V3 semantic enrichment
-
----
-
-### Demo Scripts
-
-The repository also includes runnable demo scripts:
-
-demo/
-predictive_log_anomaly_engine_demo.py
-predictive_log_anomaly_engine_gpu_demo.py
-
-These scripts generate synthetic events and visualize anomaly detection behavior.
+**Core Technologies:** Python · FastAPI · PyTorch · Sentence Transformers · Prometheus · Grafana · Docker · Pytest
 
 ---
 
 ## Quick Start
 
-Build and run the system:
+```bash
+docker compose -f docker/docker-compose.yml up -d
+```
+
+---
+
+## Service URLs
+
+//localhost:8000
+
+Health check	http://localhost:8000/health
+
+Metrics	http://localhost:8000/metrics
+
+Prometheus	http://localhost:9090
+
+Grafana	http://localhost:3000
+
+To enable V3 semantic enrichment:
 
 ```bash
-docker compose -f docker/docker-compose.yml build
-docker compose -f docker/docker-compose.yml up
+SEMANTIC_ENABLED=true docker compose -f docker/docker-compose.yml up -d
 ```
 
 ---
 
-## Open the Services
+## Project Structure
 
-### API / UI
-
-```web
-http://localhost:8000
-```
-
-### Prometheus
-
-```web
-http://localhost:9090
-```
-
-### Grafana
-
-```web
-http://localhost:3000
-```
+src/         Core system — API, runtime, alerts, observability, semantic layer
+docker/      Runtime stack — Compose files, Dockerfile
+tests/       Automated test suite (unit + integration)
+training/    Model training scripts
+artifacts/   Runtime assets — vocab, thresholds, templates
+scripts/     Data pipeline and utility scripts
+notebooks/   Walkthroughs and demos
+docs/        Architecture docs and reports
+archive/     Legacy scripts and generated history
 
 ---
 
-## Demo Walkthrough
+## Documentation & Notebooks
 
-| Step  | Action                | Expected Result                            |
-|-------|-----------------------|--------------------------------------------|
-| 1     | Ingest events         | Synthetic logs enter the runtime pipeline  |
-| 2     | Open alerts view      | Alerts appear with severity and score      |
-| 3     | Open dashboards       | Prometheus / Grafana show runtime metrics  |
-| 4     | Query investigation   | System returns investigation information   |
+Documentation	           |    Path
+---------------------------|----------------------------------------------
+Repository Structure	   |docs/repository_structure.md
 
----
+Technical Walkthrough	   |notebooks/technical_walkthrough.ipynb
 
-## Evaluation (V1 vs V2)
+Repository Structure	   |docs/repository_structure.md
 
-The repository includes evaluation tooling for comparing the **V1 and V2 anomaly pipelines** on labeled datasets.
+Interactive Structure	   | notebooks/repository_structure.ipynb
 
-## Prerequisites
+V3 Semantic Demo	       | notebooks/v3_semantic_demo.ipynb
 
-All four model artifacts must exist:
-models/embeddings/word2vec.model
-models/behavior/behavior_model.pt
-models/anomaly/anomaly_detector.pt
-models/severity/severity_classifier.pt
-
-Train them if missing:
-
-python -m training.train_embeddings
-python -m training.train_behavior_model
-python -m training.train_autoencoder
-python -m training.train_severity_model
+V3 Design Plan	           | docs/V3_REFACTOR_AND_HF_INTEGRATION_PLAN.md
 
 ---
 
-## Run Evaluation
+## Use Cases
 
-python scripts/evaluate_v2.py
-
-Evaluates labeled HDFS sessions and generates performance comparison.
-
-Output is written to:
-
-evaluation_report.json
-
----
-
-## Testing
-
-### Fast tests
-
-pytest -m "not slow"
-
-### Integration tests
-
-pytest -m integration
-
----
-
-## Documentation Structure
-
-Additional documentation is available under:
-
-```text
-docs/
-
-docs/current_system
-docs/api
-docs/operations
-docs/system_validation
-```
-
----
-
-## Project Team
-
-Developed as part of an **Applied AI Engineering project**.
-DevOps, QA, Backend Engineering, Frontend Development, UI Design, Architecture Design, Technical Specification.
-
-**Oren Salami**
-**Dan Kalfon**
-**Nahshon Raizman**
-**Jonathan Finkelstein**
-
----
-
-## V3 Semantic Layer
-
-The V3 semantic layer is integrated into the pipeline and exposed through dedicated API endpoints.
-It is **disabled by default** (`SEMANTIC_ENABLED=false`) and can be enabled independently of the V1/V2 inference backbone.
-
-### V3 API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/v3/ingest` | POST | Versioned ingest with explicit semantic fields in the alert response |
-| `/v3/alerts/{alert_id}/explanation` | GET | Semantic explanation for a specific alert |
-| `/v3/models/info` | GET | Inference mode and semantic layer status |
-
-### Enabling V3 Semantic Enrichment
-
-Set `SEMANTIC_ENABLED=true` in your environment (or `docker-compose.yml`):
-
-```bash
-SEMANTIC_ENABLED=true docker compose -f docker/docker-compose.yml up
-```
-
-On first run with semantic enabled, the `all-MiniLM-L6-v2` sentence-transformers model (~90 MB) is downloaded
-from Hugging Face and cached in `hf_cache/` (persisted via volume mount).
-
-### V3 Alert Fields (when semantic enabled)
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `explanation` | `str` | Rule-based text description of the anomaly |
-| `evidence_tokens` | `list` | Template snippets that triggered the explanation |
-| `semantic_similarity` | `float` | Cosine similarity to most similar prior alert |
-| `top_similar_events` | `list` | Top-3 most similar historical alerts |
-
-See `docs/V3_ARCHITECTURE.md` for the full design.
+- Early detection of system instability in production environments
+- Behavioral monitoring of distributed systems
+- Log-driven incident prediction and alerting
+- Observability augmentation beyond traditional metrics
 
 ---
 
 ## Project Status
 
-Current repository status:
-
-- runtime inference pipeline implemented
-- anomaly detection models integrated
-- alert pipeline implemented
-- observability stack integrated
-- Grafana and Prometheus configured
-- Docker deployment implemented
-- evaluation framework implemented
-- investigation UI implemented
-- V3 semantic layer integrated: explanation, similarity, and V3 API endpoints added (Phase 8)
-
-The project preserves the working V1/V2 backbone with a fully modular V3 semantic enrichment layer.
-
-**All tests passing (557+ tests)** and full containerized runtime included.
+- Docker build and runtime: validated
+- Health and metrics endpoints: confirmed
+- Alert pipeline, deduplication, and n8n forwarding: complete
+- V3 semantic layer: integrated and tested
+- Observability stack: Prometheus + Grafana configured
+- Test suite: validated (full execution confirmed in containerized environment)
+- Documentation: comprehensive and up to date
+- Notebooks: technical walkthrough and V3 demo completed
 
 ---
 
-## Career / Portfolio Value
+## Project Team
 
-This project demonstrates practical work across:
+Developed as part of an Applied AI Engineering project.
 
-- AI runtime systems
-- anomaly detection pipelines
-- FastAPI backend engineering
-- observability architecture
-- Docker-based deployment
-- CI/CD validation
-- investigation-oriented system design
+**Oren Salami · Dan Kalfon · Nahshon Raizman · Jonathan Finkelstein**
 
-Built as part of an **Applied AI Engineering project**.
+The team collaborated across multiple domains including system architecture, backend development, observability, and AI pipeline design.
+
+**Core Areas:** DevOps · Backend · Frontend · UI · QA · Architecture · Technical Design
 
 ---
+

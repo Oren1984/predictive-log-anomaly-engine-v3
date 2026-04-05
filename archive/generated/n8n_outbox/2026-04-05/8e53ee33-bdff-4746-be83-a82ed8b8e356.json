@@ -1,0 +1,32 @@
+{
+  "alert_id": "8e53ee33-bdff-4746-be83-a82ed8b8e356",
+  "severity": "critical",
+  "service": "demo",
+  "score": 100.0,
+  "timestamp": 0.0,
+  "evidence_window": {
+    "templates_preview": [
+      "tid=2488: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO CE sym <NUM>, at 0x06ba5080, mask 0x02",
+      "tid=5204: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO NFS Mount failed on bglio426, slept <NUM> seconds,...",
+      "tid=5488: - <HEX> <DATE> UNKNOWN_LOCATION <TS> UNKNOWN_LOCATION NULL DISCOVERY INFO Ido chip status changed: F...",
+      "tid=1665: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL FATAL rts tree<PATH> link training failed: wanted: A B ...",
+      "tid=6365: - <HEX> <DATE> UNKNOWN_LOCATION <TS> UNKNOWN_LOCATION NULL DISCOVERY INFO New ido chip inserted into..."
+    ],
+    "token_count": 10,
+    "start_ts": 0.0,
+    "end_ts": 0.0
+  },
+  "model_name": "baseline",
+  "threshold": 0.3303178258763508,
+  "meta": {
+    "stream_key": "demo:warmup-session",
+    "is_anomaly": true,
+    "window_size": 10,
+    "label": 0,
+    "emit_index": 59
+  },
+  "explanation": null,
+  "semantic_similarity": null,
+  "top_similar_events": null,
+  "evidence_tokens": null
+}

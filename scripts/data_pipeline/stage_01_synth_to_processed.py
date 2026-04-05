@@ -1,4 +1,4 @@
-# scripts/stage_01_synth_to_processed.py
+# scripts/data_pipeline/stage_01_synth_to_processed.py
 
 # Purpose: Copy events_synth.parquet to data/processed/, sorted by timestamp. 
 # Ensures the synthetic parquet matches the same schema conventions used by the existing pipeline 
@@ -23,8 +23,8 @@ and is sorted by timestamp.
 Does NOT modify data/processed/events_tokenized.parquet or any other existing file.
 
 Usage:
-    python scripts/stage_01_synth_to_processed.py
-    python scripts/stage_01_synth_to_processed.py \\
+    python scripts/data_pipeline/stage_01_synth_to_processed.py
+    python scripts/data_pipeline/stage_01_synth_to_processed.py \\
         --in  data/synth/events_synth.parquet \\
         --out data/processed/events_synth.parquet
 """
@@ -36,7 +36,7 @@ import sys
 import time
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
 import pandas as pd

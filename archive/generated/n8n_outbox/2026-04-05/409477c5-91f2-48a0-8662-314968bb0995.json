@@ -1,0 +1,32 @@
+{
+  "alert_id": "409477c5-91f2-48a0-8662-314968bb0995",
+  "severity": "critical",
+  "service": "demo",
+  "score": 100.0,
+  "timestamp": 0.0,
+  "evidence_window": {
+    "templates_preview": [
+      "tid=5178: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO NFS Mount failed on bglio204, slept <NUM> seconds,...",
+      "tid=2911: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO CE sym <NUM>, at 0x0b85f280, mask 0x02",
+      "tid=4763: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO Kernel detected <NUM> integer alignment exceptions...",
+      "tid=5382: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO critical input interrupt (unit=0x0b bit=0x0e): war...",
+      "tid=1180: - <HEX> <DATE> <NODE> <TS> <NODE> NULL HARDWARE WARNING PrepareForService shutting down LinkCard(mLc..."
+    ],
+    "token_count": 10,
+    "start_ts": 0.0,
+    "end_ts": 0.0
+  },
+  "model_name": "baseline",
+  "threshold": 0.3303178258763508,
+  "meta": {
+    "stream_key": "demo:warmup-session",
+    "is_anomaly": true,
+    "window_size": 10,
+    "label": 0,
+    "emit_index": 44
+  },
+  "explanation": null,
+  "semantic_similarity": null,
+  "top_similar_events": null,
+  "evidence_tokens": null
+}

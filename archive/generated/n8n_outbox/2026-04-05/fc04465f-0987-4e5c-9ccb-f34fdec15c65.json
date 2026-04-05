@@ -1,0 +1,32 @@
+{
+  "alert_id": "fc04465f-0987-4e5c-9ccb-f34fdec15c65",
+  "severity": "critical",
+  "service": "demo",
+  "score": 100.0,
+  "timestamp": 0.0,
+  "evidence_window": {
+    "templates_preview": [
+      "tid=2167: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO CE sym <NUM>, at 0x03658a80, mask 0x40",
+      "tid=5217: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO NFS Mount failed on bglio516, slept <NUM> seconds,...",
+      "tid=6458: - <HEX> <DATE> UNKNOWN_LOCATION <TS> UNKNOWN_LOCATION NULL DISCOVERY INFO Node card VPD check: U01 n...",
+      "tid=2488: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO CE sym <NUM>, at 0x06ba5080, mask 0x02",
+      "tid=5204: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO NFS Mount failed on bglio426, slept <NUM> seconds,..."
+    ],
+    "token_count": 10,
+    "start_ts": 0.0,
+    "end_ts": 0.0
+  },
+  "model_name": "baseline",
+  "threshold": 0.3303178258763508,
+  "meta": {
+    "stream_key": "demo:warmup-session",
+    "is_anomaly": true,
+    "window_size": 10,
+    "label": 0,
+    "emit_index": 56
+  },
+  "explanation": null,
+  "semantic_similarity": null,
+  "top_similar_events": null,
+  "evidence_tokens": null
+}

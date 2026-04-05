@@ -1,0 +1,32 @@
+{
+  "alert_id": "39b0ab86-e72e-4fde-a831-3809b1bf8482",
+  "severity": "critical",
+  "service": "demo",
+  "score": 100.0,
+  "timestamp": 0.0,
+  "evidence_window": {
+    "templates_preview": [
+      "tid=3813: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO CE sym <NUM>, at 0x1b859080, mask 0x30",
+      "tid=1448: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL FATAL enable overflow exceptions...............<NUM>",
+      "tid=7501: KERNMNTF <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL FATAL Lustre mount FAILED : bglio730 : block_id ...",
+      "tid=7811: KERNNOETH <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL FATAL no ethernet link",
+      "tid=2814: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO CE sym <NUM>, at 0x0ad93300, mask 0x04"
+    ],
+    "token_count": 10,
+    "start_ts": 0.0,
+    "end_ts": 0.0
+  },
+  "model_name": "baseline",
+  "threshold": 0.3303178258763508,
+  "meta": {
+    "stream_key": "demo:warmup-session",
+    "is_anomaly": true,
+    "window_size": 10,
+    "label": 0,
+    "emit_index": 34
+  },
+  "explanation": null,
+  "semantic_similarity": null,
+  "top_similar_events": null,
+  "evidence_tokens": null
+}

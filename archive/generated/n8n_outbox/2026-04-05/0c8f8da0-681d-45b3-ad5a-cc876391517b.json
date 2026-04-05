@@ -1,0 +1,32 @@
+{
+  "alert_id": "0c8f8da0-681d-45b3-ad5a-cc876391517b",
+  "severity": "critical",
+  "service": "demo",
+  "score": 100.0,
+  "timestamp": 0.0,
+  "evidence_window": {
+    "templates_preview": [
+      "tid=5711: - <HEX> <DATE> UNKNOWN_LOCATION <TS> UNKNOWN_LOCATION NULL DISCOVERY INFO Ido chip status changed: F...",
+      "tid=4053: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO Kernel detected <HEX> integer alignment exceptions...",
+      "tid=7165: KERNMNTF <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL FATAL Lustre mount FAILED : bglio459 : point <PA...",
+      "tid=5264: - <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL INFO NFS Mount failed on bglio828, slept <NUM> seconds,...",
+      "tid=7813: KERNREC <HEX> <DATE> <NODE> <TS> <NODE> RAS KERNEL FATAL Error receiving packet on tree network, exp..."
+    ],
+    "token_count": 10,
+    "start_ts": 0.0,
+    "end_ts": 0.0
+  },
+  "model_name": "baseline",
+  "threshold": 0.3303178258763508,
+  "meta": {
+    "stream_key": "demo:warmup-session",
+    "is_anomaly": true,
+    "window_size": 10,
+    "label": 0,
+    "emit_index": 59
+  },
+  "explanation": null,
+  "semantic_similarity": null,
+  "top_similar_events": null,
+  "evidence_tokens": null
+}

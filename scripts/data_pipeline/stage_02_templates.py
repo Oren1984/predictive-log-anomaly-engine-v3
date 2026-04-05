@@ -1,4 +1,4 @@
-# scripts/stage_02_templates.py
+# scripts/data_pipeline/stage_02_templates.py
 
 # Purpose: Load existing mining artifacts and write artifacts/templates.json, artifacts/vocab.json, and data/processed/events_tokenized.parquet.
 
@@ -22,9 +22,9 @@ Parquet output columns: timestamp, service, session_id,
                          template_id, token_id, label
 
 Usage:
-    python scripts/stage_02_templates.py
-    python scripts/stage_02_templates.py --mode demo
-    python scripts/stage_02_templates.py --mode full
+    python scripts/data_pipeline/stage_02_templates.py
+    python scripts/data_pipeline/stage_02_templates.py --mode demo
+    python scripts/data_pipeline/stage_02_templates.py --mode full
 """
 import argparse
 import json
@@ -36,7 +36,7 @@ from pathlib import Path
 import pandas as pd
 import psutil
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
 from src.parsing import TemplateMiner, EventTokenizer

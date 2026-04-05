@@ -1,4 +1,4 @@
-# scripts/stage_01_synth_generate.py
+# scripts/data_pipeline/stage_01_synth_generate.py
 
 # Purpose: This script generates synthetic log events for testing and demonstration purposes.
 # It creates multiple scenarios with different patterns of normal and anomalous behavior,
@@ -26,14 +26,14 @@ Builds 4 single-pattern scenarios + 1 hybrid scenario and writes:
 Logs to: ai_workspace/logs/stage_01_generate_synth.log
 
 Legacy usage (unchanged):
-    python scripts/stage_01_synth_generate.py --mode demo
-    python scripts/stage_01_synth_generate.py --mode full --events 200000
-    python scripts/stage_01_synth_generate.py --mode demo --seed 123
+    python scripts/data_pipeline/stage_01_synth_generate.py --mode demo
+    python scripts/data_pipeline/stage_01_synth_generate.py --mode full --events 200000
+    python scripts/data_pipeline/stage_01_synth_generate.py --mode demo --seed 123
 
 New usage (adds --n-events, --services, --out, --schema-out):
-    python scripts/stage_01_synth_generate.py --n-events 50000
-    python scripts/stage_01_synth_generate.py --n-events 50000 --services auth,api,billing,db
-    python scripts/stage_01_synth_generate.py --n-events 50000 --out data/synth/events_synth.parquet
+    python scripts/data_pipeline/stage_01_synth_generate.py --n-events 50000
+    python scripts/data_pipeline/stage_01_synth_generate.py --n-events 50000 --services auth,api,billing,db
+    python scripts/data_pipeline/stage_01_synth_generate.py --n-events 50000 --out data/synth/events_synth.parquet
 """
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ import sys
 import time
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
 import pandas as pd
@@ -251,7 +251,7 @@ def _write_synth_report(
     n_total   = len(df_canonical)
 
     cmd = (
-        f"python scripts/stage_01_synth_generate.py "
+        f"python scripts/data_pipeline/stage_01_synth_generate.py "
         f"--n-events {n_events} --services {','.join(services)} --seed {seed}"
     )
 

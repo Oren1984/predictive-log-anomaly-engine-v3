@@ -1,0 +1,35 @@
+{
+  "evaluation_config": {
+    "sessions_evaluated": 2000,
+    "window_size": 5,
+    "v1_mode": "baseline",
+    "ground_truth_source": "C:\\Users\\ORENS\\predictive-log-anomaly-engine-v2\\data\\raw\\HDFS_1\\anomaly_label.csv",
+    "events_source": "C:\\Users\\ORENS\\predictive-log-anomaly-engine-v2\\data\\processed\\events_tokenized.parquet"
+  },
+  "v1": {
+    "total_sessions": 2000,
+    "skipped": 0,
+    "TP": 291,
+    "FP": 1709,
+    "TN": 0,
+    "FN": 0,
+    "precision": 0.1455,
+    "recall": 1.0,
+    "f1": 0.254,
+    "fpr": 1.0,
+    "avg_latency_ms": 4.6223
+  },
+  "v2": {
+    "total_sessions": 2000,
+    "skipped": 0,
+    "TP": 291,
+    "FP": 1709,
+    "TN": 0,
+    "FN": 0,
+    "precision": 0.1455,
+    "recall": 1.0,
+    "f1": 0.254,
+    "fpr": 1.0,
+    "avg_latency_ms": 0.489
+  }
+}

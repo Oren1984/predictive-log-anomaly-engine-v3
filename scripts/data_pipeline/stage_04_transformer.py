@@ -1,4 +1,4 @@
-# scripts/stage_04_transformer.py
+# scripts/data_pipeline/stage_04_transformer.py
 
 # Purpose: Train a next-token GPT-style transformer model on the sequence data 
 # and evaluate its performance for anomaly detection.
@@ -26,9 +26,9 @@ Writes : models/transformer.pt
          reports/metrics_transformer.json
 
 Usage:
-    python scripts/stage_04_transformer.py
-    python scripts/stage_04_transformer.py --mode demo   (2 epochs, small cfg)
-    python scripts/stage_04_transformer.py --device cuda
+    python scripts/data_pipeline/stage_04_transformer.py
+    python scripts/data_pipeline/stage_04_transformer.py --mode demo   (2 epochs, small cfg)
+    python scripts/data_pipeline/stage_04_transformer.py --device cuda
 """
 import argparse
 import json
@@ -40,7 +40,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
 from src.sequencing import Sequence

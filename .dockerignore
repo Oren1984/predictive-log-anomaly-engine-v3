@@ -2,8 +2,6 @@
 #
 # Must live at the build context root (repo root) for Docker to honour it.
 # Build context is the repo root — see docker/docker-compose.yml: context: ..
-#
-# docker/.dockerignore is kept as a reference copy but is NOT used by Docker.
 
 # Python
 __pycache__/
@@ -41,5 +39,3 @@ data/synth/
 
 # Windows junk
 nul
-tmpclaude-*-cwdnul
-reports/*.

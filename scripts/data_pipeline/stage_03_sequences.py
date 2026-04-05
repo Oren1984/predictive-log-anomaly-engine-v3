@@ -1,4 +1,4 @@
-# scripts/stage_03_sequences.py
+# scripts/data_pipeline/stage_03_sequences.py
 
 # Purpose: Build train/val/test sequence splits and write parquet files for model training and evaluation.
 
@@ -20,8 +20,8 @@ Writes : data/processed/sequences_train.parquet
          data/processed/sequences_test.parquet
 
 Usage:
-    python scripts/stage_03_sequences.py
-    python scripts/stage_03_sequences.py --mode demo  (first 2000 sessions)
+    python scripts/data_pipeline/stage_03_sequences.py
+    python scripts/data_pipeline/stage_03_sequences.py --mode demo  (first 2000 sessions)
 """
 import argparse
 import json
@@ -32,7 +32,7 @@ from pathlib import Path
 
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
 from src.parsing import EventTokenizer

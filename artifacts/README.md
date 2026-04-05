@@ -14,5 +14,13 @@ training, calibration, and runtime execution.
 These files are generated automatically by pipeline scripts and
 runtime components.
 
-Most artifacts are not version-controlled and may be regenerated
-when running the pipeline.
+## Repository policy
+
+- Runtime-required artifacts that should remain in-repo:
+	- `threshold.json`
+	- `threshold_transformer.json`
+	- `threshold_runtime.json` (when available)
+	- `vocab.json`
+	- `templates.json`
+- Generated alert payloads are written under `artifacts/n8n_outbox/`.
+- Historical generated payload snapshots may be rotated under `artifacts/archive/`.
