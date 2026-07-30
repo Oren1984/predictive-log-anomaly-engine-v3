@@ -39,3 +39,9 @@ data/synth/
 
 # Windows junk
 nul
+
+# Claude local workspace
+
+.claude/
+CLAUDE.md
+.claudeignore
